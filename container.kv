@@ -1,21 +1,154 @@
+#:import utils kivy.utils
+
 <ItemLabel@Label>
     font_size: '15sp'
     halign: 'left'
     valign: 'top'
     text_size: self.size
+    multiline: True
+    markup: True
 
-<Container>
-    rows: 4
-    file_path: file_path
-    massage: massage
-    step_info: step_info
-    step_button: step_button
+<InputString@TextInput>
+    multiline: False
+    background_normal: 'white_pixel.png'
+    background_active: 'white_pixel.png'
+    size_hint: .96, .4
+    pos_hint: {'x':.02, 'y':.5}
+
+<CheckSaveButton@Button>
+    size_hint: .3, .3
+    pos_hint: {'x':.68, 'y':.1}
+    text: 'Проверить/Сохранить'
+
+<ScreenTemplate>
+    main_screen: main_screen
+    text_label: text_label
 
     AnchorLayout:
-        TextInput:
+        anchor_x: 'center'
+        anchor_y: 'top'
+
+        FloatLayout:
+            size_hint: 1, .1
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#999999')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                id: text_label
+                markup: True
+                pos_hint: {'x':.025, 'y':0}
+                size_hint: .3, .7
+                text_size: self.size
+                halign: 'center'
+
+                canvas.before:
+                    Color:
+                        rgba: utils.get_color_from_hex('#bcbcbc')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'bottom'
+
+            FloatLayout:
+                id: main_screen
+                size_hint: 1, .9
+                canvas:
+                    Color:
+                        rgba: utils.get_color_from_hex('#999999')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+<SettingLayout>:
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    rows: 4
+    file_path: file_path
+    images_path: images_path
+    cell_color: cell_color
+    console: console
+
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    FloatLayout:
+        padding: [5, 5, 5, 5]
+        InputString:
             id: file_path
             text: 'Введите путь к файлу xlsx'
-            multiline: False
+
+        CheckSaveButton
+            name: 'file_path_button'
+            on_release: root.handle_path(self.name)
+            #on_release: root.parent.parent.parent.parent.parent.parent.parent.handle_path()
+
+
+    FloatLayout:
+        padding: [5, 5, 5, 5]
+        InputString:
+            id: images_path
+            text: 'Введите путь к папке с фото'
+
+        CheckSaveButton
+            name: 'images_path_button'
+            on_release: root.handle_path(self.name)
+
+    FloatLayout:
+        padding: [5, 5, 5, 5]
+        InputString:
+            id: cell_color
+            text: 'Введите цвет шрифта ячеек для удаления'
+
+        CheckSaveButton
+            name: 'cell_color_button'
+            on_release: root.handle_path(self.name)
+
+    FloatLayout:
+        FloatLayout:
+            size_hint: .96, .9
+            pos_hint: {'x':.02, 'y':.1}
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#ffffff')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            ItemLabel:
+                id: console
+                size_hint: .98, .9
+                pos_hint: {'x':.01, 'y':.1}
+                text: 'Консоль'
+                color: utils.get_color_from_hex('#000000')
+
+
+<HandleLayout>:
+    rows: 3
+    padding: 50
+    #file_path: file_path
+    massage: massage
+    step_info: step_info
+    #step_button: step_button
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        InputString
+
 
     AnchorLayout:
         padding: [20, 5, 20, 5]
@@ -29,16 +162,52 @@
             id: massage
             text: ''
 
-    GridLayout:
-        cols: 2
-        padding: [20, 5, 20, 5]
+<UploadLayout>:
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    rows: 1
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-        Button:
-            id : step_button
-            text: 'Настройки'
-            on_release: root.handle_press()
+    Label:
+        markup: True
+        text: '[size=24]Welcome to [color=dd88ff]THE APP[/color][/size]'
 
-        Button:
-            id : setting_button
-            text: 'Обработка: шаг 1'
-            on_release: root.handle_press()
+
+<Container>
+    _screen_manager: _screen_manager
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'top'
+
+        NewScreenManager:
+            size_hint: 1, .9
+            id: _screen_manager
+
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'bottom'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 1, .1
+
+            Button:
+                id : setting_button
+                text: 'Настройки'
+                on_release: _screen_manager.current = 'screen1'
+
+            Button:
+                id : processing_button
+                text: 'Обработка'
+                on_release: _screen_manager.current = 'screen2'
+
+            Button:
+                id : upload_button
+                text: 'Выгрузка'
+                on_release: _screen_manager.current = 'screen3'

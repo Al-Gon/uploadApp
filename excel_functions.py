@@ -3,13 +3,16 @@ import datetime
 import os
 import re
 
-def check_path(file_path: str):
+def check_file_path(file_path: str):
     try:
         f = open(file_path, 'r')
         f.close()
     except IOError:
         return False
     return True
+
+def check_folder_path(folder_path: str):
+    return True if os.path.exists(folder_path) and os.path.isdir(folder_path) else False
 
 def search_cell_font_colors(table: list):
     font_colors = set()
