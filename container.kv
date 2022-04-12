@@ -8,12 +8,17 @@
     multiline: True
     markup: True
 
+<InputLabel@ItemLabel>
+    color: utils.get_color_from_hex('#000000')
+    size_hint: .3, .4
+    pos_hint: {'x':.02, 'y':.5}
+
 <InputString@TextInput>
     multiline: False
     background_normal: 'white_pixel.png'
     background_active: 'white_pixel.png'
-    size_hint: .96, .4
-    pos_hint: {'x':.02, 'y':.5}
+    size_hint: .66, .4
+    pos_hint: {'x':.32, 'y':.5}
 
 <CheckSaveButton@Button>
     size_hint: .3, .3
@@ -67,7 +72,7 @@
 <SettingLayout>:
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
-    rows: 4
+    save_dir_path: save_dir_path
     file_path: file_path
     images_path: images_path
     cell_color: cell_color
@@ -79,55 +84,113 @@
         Rectangle:
             pos: self.pos
             size: self.size
+    AnchorLayout:
+        pos_hint: {'x':0, 'y':0}
+        anchor_x: 'center'
+        anchor_y: 'top'
+##############################################
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            size_hint: 1, .75
+            bar_width: 10
+            bar_color: utils.get_color_from_hex('#ffffff')
+            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
 
-    FloatLayout:
-        padding: [5, 5, 5, 5]
-        InputString:
-            id: file_path
-            text: 'Введите путь к файлу xlsx'
+            GridLayout:
+                cols: 1
+                size_hint: 1, None
+                height: 1000
+                #minimum_height: self.height
 
-        CheckSaveButton
-            name: 'file_path_button'
-            on_release: root.handle_path(self.name)
-            #on_release: root.parent.parent.parent.parent.parent.parent.parent.handle_path()
+                FloatLayout:
+                    padding: [5, 5, 5, 5]
+                    size_hint: 1, None
+                    height: 100
 
+                    InputLabel:
+                        text: 'Путь к папке для хранения файлов:'
 
-    FloatLayout:
-        padding: [5, 5, 5, 5]
-        InputString:
-            id: images_path
-            text: 'Введите путь к папке с фото'
+                    InputString:
+                        id: save_dir_path
+                        text: 'Введите путь к папке для хранения файлов'
 
-        CheckSaveButton
-            name: 'images_path_button'
-            on_release: root.handle_path(self.name)
+                    CheckSaveButton
+                        name: 'save_dir_path_button'
+                        on_release: root.handle_path(self.name)
 
-    FloatLayout:
-        padding: [5, 5, 5, 5]
-        InputString:
-            id: cell_color
-            text: 'Введите цвет шрифта ячеек для удаления'
+                FloatLayout:
+                    padding: [5, 5, 5, 5]
+                    size_hint: 1, None
+                    height: 100
 
-        CheckSaveButton
-            name: 'cell_color_button'
-            on_release: root.handle_path(self.name)
+                    InputLabel:
+                        text: 'Путь к файлу xlsx:'
 
-    FloatLayout:
+                    InputString:
+                        id: file_path
+                        text: 'Введите путь к файлу xlsx'
+
+                    CheckSaveButton
+                        name: 'file_path_button'
+                        on_release: root.handle_path(self.name)
+                        #on_release: root.parent.parent.parent.parent.parent.parent.parent.handle_path()
+
+                FloatLayout:
+                    padding: [5, 5, 5, 5]
+                    size_hint: 1, None
+                    height: 100
+
+                    InputLabel:
+                        text: 'Путь к папке с фото:'
+
+                    InputString:
+                        id: images_path
+                        text: 'Введите путь к папке с фото'
+
+                    CheckSaveButton
+                        name: 'images_path_button'
+                        on_release: root.handle_path(self.name)
+
+                FloatLayout:
+                    padding: [5, 5, 5, 5]
+                    size_hint: 1, None
+                    height: 100
+
+                    InputLabel:
+                        text: 'Цвет шрифта ячеек для удаления:'
+
+                    InputString:
+                        id: cell_color
+                        text: 'Введите цвет шрифта ячеек для удаления'
+
+                    CheckSaveButton
+                        name: 'cell_color_button'
+                        on_release: root.handle_path(self.name)
+#########################################################
+    AnchorLayout:
+        pos_hint: {'x':0, 'y':0}
+        anchor_x: 'center'
+        anchor_y: 'bottom'
+
         FloatLayout:
-            size_hint: .96, .9
-            pos_hint: {'x':.02, 'y':.1}
-            canvas:
-                Color:
-                    rgba: utils.get_color_from_hex('#ffffff')
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            ItemLabel:
-                id: console
-                size_hint: .98, .9
-                pos_hint: {'x':.01, 'y':.1}
-                text: 'Консоль'
-                color: utils.get_color_from_hex('#000000')
+            size_hint: 1, .25
+
+            FloatLayout:
+                size_hint: .96, .85
+                pos_hint: {'x':.02, 'y':.1}
+                canvas:
+                    Color:
+                        rgba: utils.get_color_from_hex('#ffffff')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                ItemLabel:
+                    id: console
+                    size_hint: .98, .9
+                    pos_hint: {'x':.01, 'y':.1}
+                    text: 'Консоль'
+                    color: utils.get_color_from_hex('#000000')
 
 
 <HandleLayout>:

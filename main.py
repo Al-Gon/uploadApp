@@ -6,6 +6,8 @@ from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.storage.jsonstore import JsonStore
+from kivy.core.window import Window
 
 import excel_functions as ex
 from kivy.app import App
@@ -14,21 +16,46 @@ from kivy.properties import ObjectProperty, StringProperty
 class ScreenTemplate(Screen):
     pass
 
-class SettingLayout(GridLayout):
+class SettingLayout(FloatLayout):
+    def __init__(self, **kwargs):
+        super(SettingLayout, self).__init__(**kwargs)
+        self.store = JsonStore('settings.json')
+        if len(self.store.get('save_dir_path')['path']):
+            self.save_dir_path.text = self.store.get('save_dir_path')['path']
+        if len(self.store.get('file_path')['path']):
+            self.file_path.text = self.store.get('file_path')['path']
+        if len(self.store.get('images_path')['path']):
+            self.images_path.text = self.store.get('images_path')['path']
+        if len(self.store.get('cell_color')['value']):
+            self.cell_color.text = self.store.get('cell_color')['value']
+
     def handle_path(self, name):
+        if name == 'save_dir_path_button':
+            if ex.check_folder_path(self.save_dir_path.text):
+                self.store.put('save_dir_path', path=self.save_dir_path.text)
+                self.console.text = 'Путь к папке успешно сохранен в настройках.'
+            else:
+                self.save_dir_path.text = 'Введите путь к папке для хранения файлов'
+                self.console.text = 'Путь к папке указан не верно.'
         if name == 'file_path_button':
             if ex.check_file_path(self.file_path.text):
-                print(name)
+                self.store.put('file_path', path=self.file_path.text)
+                self.console.text = 'Путь к файлу успешно сохранен в настройках.'
             else:
+                self.file_path.text = 'Введите путь к файлу xlsx'
                 self.console.text = 'Путь к файлу указан не верно.'
         if name == 'images_path_button':
             if ex.check_folder_path(self.images_path.text):
-                print(name)
+                self.store.put('images_path', path=self.images_path.text)
+                self.console.text = 'Путь к папке успешно сохранен в настройках.'
             else:
-                self.console.text = 'Путь к папке указан неверно либо в ней фотографий'
+                self.images_path.text = 'Введите путь к папке с фото'
+                self.console.text = 'Путь к папке указан не верно либо в ней фотографий'
         if name == 'cell_color_button':
-            print(name)
-    pass
+            self.store.put('cell_color', value=self.cell_color.text)
+            self.console.text = 'Значение цвета успешно сохранено в настройках.'
+
+
 
 class HandleLayout(GridLayout):
     pass
@@ -63,9 +90,6 @@ class Container(FloatLayout):
         self._screen_manager.add_widget(self.settings_screen)
         self._screen_manager.add_widget(self.handle_screen)
         self._screen_manager.add_widget(self.upload_screen)
-
-    def handle_path(self):
-        print('ok')
 
 
     # def handle_press(self):
@@ -110,4 +134,5 @@ class ContainerApp(App):
 if __name__ == '__main__':
     if hasattr(sys, '_MEIPASS'):
         resource_add_path(os.path.join(sys._MEIPASS))
+    Window.size = (700, 700)
     ContainerApp().run()
