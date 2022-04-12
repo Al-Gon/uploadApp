@@ -73,13 +73,15 @@ def set_value(table: list, pos: int, val, incr: bool):
         row[pos].value = val
     return table
 
-def get_file_from_table(name_table: str, table: list, top_row: list):
+def get_file_from_table(folder_path: str, name_table: str, table: list, top_row: list):
     file_name = name_table.strip() + '_' + datetime.datetime.now().strftime('%m_%d') + '.xlsx'
+    full_path = os.path.join(folder_path, file_name)
     wb = openpyxl.Workbook()
     ws = wb.active
     for row in [top_row] + table:
         ws.append(list(map(lambda x: x.value, row)))
-    wb.save(file_name)
+    wb.save(full_path)
+    return f'Файл {file_name} успешно сохранён в папке {folder_path}.\n'
 
 def read_table(t):
     for row in t:
@@ -99,18 +101,19 @@ def check_images(path: str, table: list):
             if f_name.endswith('.jpg'):
                 images.add(f_name.split('.')[0].split('_')[0])
     articles = set(map(lambda x: x[2].value, table))
+
     if len(articles) != len(images):
-        return f'Different files numbers: in table {len(articles)} in folder {len(images)}'
+        return f'Количество записей: в файле {len(articles)} в папке {len(images)}', False
         # print(f'Different files numbers: in table {len(articles)} in folder {len(images)}')
     diff = articles.symmetric_difference(images)
     for el in diff:
         if el in articles and el not in images:
-            return f'Article {el} in table have not images'
+            return f'Записи с артикулом {el} в таблице не соответствует ни одной фотографии.\n', False
             # print(f'Article {el} in table have not images')
         if el in images and el not in articles:
-            return f'Image {el} in folder have not rows in table'
+            return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
             # print(f'Image {el} in folder have not rows in table')
-
+    return f'Фотографии успешно проверены.\n', True
 
 # wb_2 = openpyxl.load_workbook('test.xlsx')
 # sh_wb_2 = wb_2['Worksheet']

@@ -69,7 +69,7 @@
                         pos: self.pos
                         size: self.size
 
-<SettingLayout>:
+<SettingLayout>
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
     save_dir_path: save_dir_path
@@ -193,13 +193,10 @@
                     color: utils.get_color_from_hex('#000000')
 
 
-<HandleLayout>:
-    rows: 3
-    padding: 50
-    #file_path: file_path
-    massage: massage
-    step_info: step_info
-    #step_button: step_button
+<HandleLayout>
+    rows: 2
+    console: console
+    step_button: step_button
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
     canvas:
@@ -210,22 +207,34 @@
             size: self.size
 
     AnchorLayout:
-        InputString
-
+        anchor_x: 'center'
+        anchor_y: 'center'
+        FloatLayout:
+            size_hint: .94, .94
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#ffffff')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            ItemLabel:
+                id: console
+                size_hint: .98, .9
+                pos_hint: {'x':.01, 'y':.1}
+                text: 'Консоль'
+                color: utils.get_color_from_hex('#000000')
 
     AnchorLayout:
-        padding: [20, 5, 20, 5]
-        ItemLabel:
-            id: step_info
-            text: ''
+        size_hint: 1, 1
+        anchor_x: 'center'
+        anchor_y: 'center'
+        Button:
+            size_hint: .3, .2
+            id: step_button
+            text: 'Шаг 1'
+            on_release: root.handle_press_step_button(self.text)
 
-    AnchorLayout:
-        padding: [20, 5, 20, 5]
-        ItemLabel:
-            id: massage
-            text: ''
-
-<UploadLayout>:
+<UploadLayout>
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
     rows: 1
