@@ -26,7 +26,7 @@ class SettingLayout(FloatLayout):
         if len(self.store.get('cell_color')['value']):
             self.cell_color.text = self.store.get('cell_color')['value']
 
-    def handle_path(self, name):
+    def handle_path(self, name: str):
         if name == 'save_dir_path_button':
             if ex.check_folder_path(self.save_dir_path.text):
                 self.store.put('save_dir_path', path=self.save_dir_path.text)
@@ -61,7 +61,7 @@ class HandleLayout(GridLayout):
         self.del_table = None
         self.update_table = None
 
-    def handle_press_step_button(self, text):
+    def handle_press_step_button(self, text: str):
         if text == 'Шаг 1':
             file_path = self.store.get('file_path')['path']
             self.console.text = 'Файл найден.\n'
@@ -71,10 +71,13 @@ class HandleLayout(GridLayout):
 
         elif text == 'Шаг 2':
             color = self.store.get('cell_color')['value']
+            m_table, m_row, raws = ex.get_table(self.table, 2, 10)
+            self.console.text += f'Основная таблица содержит {raws} строк.\n'
+            update_table, _, raws = ex.get_table(self.table, m_row, 10)
+            self.console.text += f'Таблица для обнавления содержит {raws} строк.\n'
             self.console.text += f'Выбран цвет выделенных ячеек: {color} \n'
-            m_table, m_row = ex.get_table(self.table, 2, 10)
-            update_table, _ = ex.get_table(self.table, m_row, 10)
             self.del_table, table_norm, table_err = ex.separate_table(m_table, color)
+            self.console.text += f'Таблица для удаления содержит {len(self.del_table)} строк.\n'
             start_id = max(m_table, key=lambda x: x[0].value)[0].value
             update_table = ex.set_value(update_table, 0, start_id, True)
             self.update_table = ex.set_value(update_table, 9, '#новые поступления#', False)
@@ -110,10 +113,13 @@ class Container(FloatLayout):
         self.settings_screen = ScreenTemplate(name='screen1')
         self.settings_screen.text_label.text = '[size=18]Настройки[/size]'
         self.settings_screen.main_screen.add_widget(SettingLayout())
+        self.settings_widget = self.settings_screen.main_screen.children[0]
 
         self.handle_screen = ScreenTemplate(name='screen2')
         self.handle_screen.text_label.text = '[size=18]Обработка[/size]'
         self.handle_screen.main_screen.add_widget(HandleLayout())
+        self.handle_widget = self.handle_screen.main_screen.children[0]
+
         self.upload_screen = ScreenTemplate(name='screen3')
         self.upload_screen.text_label.text = '[size=18]Выгрузка[/size]'
 
@@ -132,5 +138,11 @@ class ContainerApp(App):
 if __name__ == '__main__':
     if hasattr(sys, '_MEIPASS'):
         resource_add_path(os.path.join(sys._MEIPASS))
+
+    if not ex.check_file_path('settings.json'):
+        file = open('settings.json', 'w')
+        file.write('{"save_dir_path": {"path": ""}, "file_path": {"path": ""}, "images_path": {"path": ""}, "cell_color": {"value": ""}}')
+        file.close()
+
     Window.size = (700, 700)
     ContainerApp().run()

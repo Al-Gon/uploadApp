@@ -50,17 +50,18 @@ def separate_table(table: list, color: str):
 def get_table(w_sheet, min_row: int, max_col: int):
     main_table = []
     max_row = 0
+    raws = 0
     for i, row in enumerate(w_sheet.iter_rows(min_row=min_row, max_col=max_col)):
         new_row = []
         for cell in row:
             new_row.append(cell)
         if [el.value for el in new_row] == [None] * len(new_row):
-            print(f'Loaded {i} rows')
+            raws = i
             max_row = i + min_row + 1
             break
         main_table.append(new_row)
 
-    return main_table, max_row
+    return main_table, max_row, raws
 
 def set_value(table: list, pos: int, val, incr: bool):
     for row in table:
