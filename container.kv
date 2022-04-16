@@ -25,6 +25,27 @@
     pos_hint: {'x':.68, 'y':.1}
     text: 'Проверить/Сохранить'
 
+<InputBlock@FloatLayout>
+    padding: [5, 5, 5, 5]
+    size_hint: 1, None
+    height: 100
+    text_label: ''
+    input_string: ''
+    button_name: ''
+    input: input
+
+    InputLabel:
+        text: root.text_label
+
+    InputString:
+        id: input
+        text: root.input_string
+
+    CheckSaveButton:
+        name: root.button_name
+        on_release: app.root.handle_path(self.name)
+
+
 <ScreenTemplate>
     main_screen: main_screen
     text_label: text_label
@@ -72,11 +93,11 @@
 <SettingLayout>
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
+    console: console
     save_dir_path: save_dir_path
-    file_path: file_path
+    file_name: file_name
     images_path: images_path
     cell_color: cell_color
-    console: console
 
     canvas:
         Color:
@@ -103,69 +124,30 @@
                 height: 1000
                 #minimum_height: self.height
 
-                FloatLayout:
-                    padding: [5, 5, 5, 5]
-                    size_hint: 1, None
-                    height: 100
+                InputBlock:
+                    id: save_dir_path
+                    text_label: 'Путь к папке для хранения файлов:'
+                    input_string: 'Введите путь к папке для хранения файлов'
+                    button_name: 'save_dir_path_button'
 
-                    InputLabel:
-                        text: 'Путь к папке для хранения файлов:'
+                InputBlock:
+                    id: file_name
+                    text_label: 'Имя файла для выгрузки xlsx:'
+                    input_string: 'Введите имя файла для выгрузки xlsx'
+                    button_name: 'file_name_button'
 
-                    InputString:
-                        id: save_dir_path
-                        text: 'Введите путь к папке для хранения файлов'
+                InputBlock:
+                    id: images_path
+                    text_label: 'Путь к папке с фото:'
+                    input_string: 'Введите путь к папке с фото'
+                    button_name: 'images_path_button'
 
-                    CheckSaveButton
-                        name: 'save_dir_path_button'
-                        on_release: root.handle_path(self.name)
+                InputBlock:
+                    id: cell_color
+                    text_label: 'Цвет шрифта ячеек для удаления:'
+                    input_string: 'Введите цвет шрифта ячеек для удаления'
+                    button_name: 'cell_color_button'
 
-                FloatLayout:
-                    padding: [5, 5, 5, 5]
-                    size_hint: 1, None
-                    height: 100
-
-                    InputLabel:
-                        text: 'Путь к файлу xlsx:'
-
-                    InputString:
-                        id: file_path
-                        text: 'Введите путь к файлу xlsx'
-
-                    CheckSaveButton
-                        name: 'file_path_button'
-                        on_release: root.handle_path(self.name)
-
-                FloatLayout:
-                    padding: [5, 5, 5, 5]
-                    size_hint: 1, None
-                    height: 100
-
-                    InputLabel:
-                        text: 'Путь к папке с фото:'
-
-                    InputString:
-                        id: images_path
-                        text: 'Введите путь к папке с фото'
-
-                    CheckSaveButton
-                        name: 'images_path_button'
-                        on_release: root.handle_path(self.name)
-
-                FloatLayout:
-                    padding: [5, 5, 5, 5]
-                    size_hint: 1, None
-                    height: 100
-
-                    InputLabel:
-                        text: 'Цвет шрифта ячеек для удаления:'
-
-                    InputString:
-                        id: cell_color
-                        text: 'Введите цвет шрифта ячеек для удаления'
-
-                    CheckSaveButton
-                        name: 'cell_color_button'
-                        on_release: root.handle_path(self.name)
 #########################################################
     AnchorLayout:
         pos_hint: {'x':0, 'y':0}
@@ -191,13 +173,79 @@
                     text: 'Консоль'
                     color: utils.get_color_from_hex('#000000')
 
+<LoadLayout>
+    orientation: 'vertical'
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    console: console
+    input: input
+    console: console
+    step_button_1: step_button_1
+    step_button_2: step_button_2
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        size_hint: 1, .6
+        anchor_x: 'center'
+        anchor_y: 'center'
+        FloatLayout:
+            size_hint: .94, .94
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#ffffff')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            ItemLabel:
+                id: console
+                size_hint: .98, .9
+                pos_hint: {'x':.01, 'y':.1}
+                text: 'Консоль'
+                color: utils.get_color_from_hex('#000000')
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        TextInput:
+            id: input
+            size_hint: .94, .94
+            multiline: False
+            multiline: False
+            background_normal: 'white_pixel.png'
+            background_active: 'white_pixel.png'
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+            Button:
+                size_hint: .5, 1
+                id: step_button_1
+                text: 'Шаг 1'
+                on_release: app.root.load_press_step_button(self.text)
+            Button:
+                size_hint: .5, 1
+                id: step_button_2
+                text: 'Шаг 4'
+                on_release: app.root.load_press_step_button(self.text)
 
 <HandleLayout>
     rows: 2
-    console: console
     step_button: step_button
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
+    console: console
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
@@ -231,7 +279,7 @@
             size_hint: .3, .2
             id: step_button
             text: 'Шаг 1'
-            on_release: root.handle_press_step_button(self.text)
+            on_release: app.root.handle_press_step_button(self.text)
 
 <UploadLayout>
     size_hint: .95, .975
@@ -274,11 +322,16 @@
                 on_release: _screen_manager.current = 'screen1'
 
             Button:
+                id : load_button
+                text: 'Загрузка'
+                on_release: _screen_manager.current = 'screen2'
+
+            Button:
                 id : processing_button
                 text: 'Обработка'
-                on_release: _screen_manager.current = 'screen2'
+                on_release: _screen_manager.current = 'screen3'
 
             Button:
                 id : upload_button
                 text: 'Выгрузка'
-                on_release: _screen_manager.current = 'screen3'
+                on_release: _screen_manager.current = 'screen4'

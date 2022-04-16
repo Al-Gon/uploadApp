@@ -16,8 +16,8 @@ def check_folder_path(folder_path: str):
 
 def search_cell_font_colors(table: list):
     font_colors = set()
-    for raw in table:
-        for cell in raw:
+    for row in table:
+        for cell in row:
             try:
                 ind = cell.font.color.index
                 if isinstance(ind, str):
@@ -32,19 +32,18 @@ def get_worksheet(file_path: str):
     title_row = list(sh_wb_2[1])
     return sh_wb_2, title_row
 
-
 def separate_table(table: list, color: str):
     table_color, table_normal, table_error = [], [], []
-    for j, raw in enumerate(table):
+    for j, row in enumerate(table):
         try:
-            ind = raw[0].font.color.index
+            ind = row[0].font.color.index
             if isinstance(ind, str) and ind == color:       # print(f'color {ind} value {raw.value}')
-                table_color.append(raw)
+                table_color.append(row)
             else:
-                table_normal.append(raw)
+                table_normal.append(row)
         except AttributeError:
-            print(f'raw number =  {j}, value {raw.value}')
-            table_error.append(raw)
+            print(f'raw number =  {j}, value {row.value}')
+            table_error.append(row)
     return table_color, table_normal, table_error
 
 def get_table(w_sheet, min_row: int, max_col: int):
@@ -74,13 +73,16 @@ def set_value(table: list, pos: int, val, incr: bool):
         row[pos].value = val
     return table
 
-def get_file_from_table(folder_path: str, name_table: str, table: list, top_row: list):
-    file_name = name_table.strip() + '_' + datetime.datetime.now().strftime('%m_%d') + '.xlsx'
+def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: list):
+    file_name = file_name.strip() + '_' + datetime.datetime.now().strftime('%d_%m') + '.xlsx'
     full_path = os.path.join(folder_path, file_name)
     wb = openpyxl.Workbook()
     ws = wb.active
     for row in [top_row] + table:
-        ws.append(list(map(lambda x: x.value, row)))
+        if isinstance(row[0], str) or isinstance(row[0], int):
+            ws.append(row)
+        else:
+            ws.append(list(map(lambda x: x.value, row)))
     wb.save(full_path)
     return f'Файл {file_name} успешно сохранён в папке {folder_path}.\n'
 
@@ -116,14 +118,15 @@ def check_images(path: str, table: list):
             # print(f'Image {el} in folder have not rows in table')
     return f'Фотографии успешно проверены.\n', True
 
-# wb_2 = openpyxl.load_workbook('test.xlsx')
+# wb_2 = openpyxl.load_workbook('C:\\Users\\jenya\\desktop\\test.xlsx')
 # sh_wb_2 = wb_2['Worksheet']
-# #
+# # #
 # title_row = list(sh_wb_2[1])
+
 # print(sh_wb_2)
 # print(search_cell_font_colors(sh_wb_2))
-# m_table, m_row = get_table(sh_wb_2, 2, 10)
-# update_table, _ = get_table(sh_wb_2, m_row, 10)
+# m_table, m_row, _ = get_table(sh_wb_2, 2, 10)
+# update_table, _, _ = get_table(sh_wb_2, m_row, 10)
 # table_del, table_norm, table_err = separate_table(m_table, 'FFFF0000')
 #
 # start_id = max(m_table, key=lambda x: x[0].value)[0].value
@@ -134,4 +137,24 @@ def check_images(path: str, table: list):
 # check_images('C:\\Users\jenya\Desktop\\23.03\\23.03', update_table)
 # get_file_from_table('update', update_table, title_row)
 # get_file_from_table('del', table_del, title_row)
-    #     print(f"coordinate: {cell.coordinate}\tvalue: {cell.value}\tcolor: {cell.fill.start_color.index}\ttext color: {cell.font.color.index}\t")
+#     print(f"coordinate: {cell.coordinate}\tvalue: {cell.value}\tcolor: {cell.fill.start_color.index}\ttext color: {cell.font.color.index}\t")
+
+def get_query_dict(calls_names: dict, title: list):
+    return dict(sorted([(calls_names[cell.value.strip()], i) for i, cell in enumerate(title)], key=lambda x: x[1])[1:])
+
+def get_insert_queries(table: dict, query_dict: dict):
+    im_names = ['image'] + ['image_' + str(i) for i in range(1, 13)]
+    folder_path = "assets/images/product_images/"
+    queries = []
+    for raw in table:
+        alias = str(raw[query_dict['alias']].value)
+        al_names = [alias] + [alias + '_' + str(i) for i in range(1, 13)]
+        part_1 = ", ".join(elem for elem in query_dict.keys())
+        part_1_1 = ", ".join(elem for elem in im_names)
+        part_2 = "', '".join('' if cell.value is None else str(cell.value) for cell in raw[1:])
+        part_2_2 = "', '".join(folder_path + elem + '.jpg' for elem in al_names)
+        queries.append(f"INSERT INTO catalog({part_1}, {part_1_1}) VALUES ('{part_2}', '{part_2_2}');")
+    return queries
+
+
+
