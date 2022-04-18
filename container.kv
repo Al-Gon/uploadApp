@@ -98,6 +98,8 @@
     file_name: file_name
     images_path: images_path
     cell_color: cell_color
+    update_file_name: update_file_name
+    del_file_name: del_file_name
 
     canvas:
         Color:
@@ -132,7 +134,7 @@
 
                 InputBlock:
                     id: file_name
-                    text_label: 'Имя файла для выгрузки таблицы xlsx:'
+                    text_label: 'Имя файла для выгрузки таблицы:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'file_name_button'
 
@@ -147,6 +149,18 @@
                     text_label: 'Цвет шрифта ячеек для удаления:'
                     input_string: 'Введите цвет шрифта ячеек для удаления'
                     button_name: 'cell_color_button'
+
+                InputBlock:
+                    id: update_file_name
+                    text_label: 'Имя файла для загрузки данных в базу:'
+                    input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
+                    button_name: 'update_file_name_button'
+
+                InputBlock:
+                    id: del_file_name
+                    text_label: 'Имя файла для удаления данных из базы:'
+                    input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
+                    button_name: 'del_file_name_button'
 
 #########################################################
     AnchorLayout:
@@ -216,8 +230,7 @@
         TextInput:
             id: input
             size_hint: .94, .94
-            multiline: False
-            multiline: False
+            multiline: True
             background_normal: 'white_pixel.png'
             background_active: 'white_pixel.png'
 
@@ -233,12 +246,12 @@
                 size_hint: .5, 1
                 id: step_button_1
                 text: 'Шаг 1'
-                on_release: app.root.load_press_step_button(self.text)
+                on_release: app.root.load_press_step(self.text)
             Button:
                 size_hint: .5, 1
                 id: step_button_2
                 text: 'Шаг 4'
-                on_release: app.root.load_press_step_button(self.text)
+                on_release: app.root.load_press_step(self.text)
 
 <HandleLayout>
     orientation: 'vertical'
@@ -280,12 +293,13 @@
             size_hint: .6, .5
             id: step_button
             text: 'Шаг 1'
-            on_release: app.root.handle_press_step_button(self.text)
+            on_release: app.root.handle_press_step(self.text)
 
 <UploadLayout>
+    orientation: 'vertical'
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
-    rows: 1
+    console: console
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
@@ -293,9 +307,40 @@
             pos: self.pos
             size: self.size
 
-    Label:
-        markup: True
-        text: '[size=24]Welcome to [color=dd88ff]THE APP[/color][/size]'
+    AnchorLayout:
+        size_hint: 1, .8
+        anchor_x: 'center'
+        anchor_y: 'center'
+        FloatLayout:
+            size_hint: .94, .94
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#ffffff')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            ItemLabel:
+                id: console
+                size_hint: .98, .9
+                pos_hint: {'x':.01, 'y':.1}
+                text: 'Консоль'
+                color: utils.get_color_from_hex('#000000')
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+            Button:
+                size_hint: .5, 1
+                text: 'Выгрузка'
+                on_release: app.root.upload_step()
+            Button:
+                size_hint: .5, 1
+                text: 'Удаление'
+                on_release: app.root.delete_step()
 
 
 <Container>

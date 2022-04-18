@@ -1,6 +1,7 @@
 import sqlite3
 import excel_functions as ex
 
+
 def get_data_from_table(query: str):
     db_file = 'site.db'
     response = []
@@ -15,9 +16,8 @@ def get_data_from_table(query: str):
             conn.commit()
     return response
 
-def insert_query(table_: list, table_n: dict, title: list):
+def make_query(queries: list):
     db_file = 'site.db'
-    queries = ex.get_insert_queries(table_, ex.get_query_dict(table_n, title))
     with sqlite3.connect(db_file, timeout=5) as conn:
         cursor = conn.cursor()
         for query in queries:
@@ -37,14 +37,3 @@ def get_table_columns():
     query = """PRAGMA table_info(Catalog);"""
     data = get_data_from_table(query)
     return list(map(lambda x: x[1], data))
-
-
-
-
-
-
-
-
-
-
-

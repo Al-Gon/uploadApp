@@ -58,18 +58,16 @@ def separate_table(table: list, color: str):
 def get_table(w_sheet, min_row: int, max_col: int):
     main_table = []
     max_row = 0
-    raws = 0
     for i, row in enumerate(w_sheet.iter_rows(min_row=min_row, max_col=max_col)):
         new_row = []
         for cell in row:
             new_row.append(cell)
         if [el.value for el in new_row] == [None] * len(new_row):
-            raws = i
             max_row = i + min_row + 1
             break
         main_table.append(new_row)
 
-    return main_table, max_row, raws
+    return main_table, max_row
 
 def set_value(table: list, pos: int, val, incr: bool):
     for row in table:
@@ -130,43 +128,32 @@ def check_images(path: str, table: list):
             # print(f'Image {el} in folder have not rows in table')
     return f'Фотографии успешно проверены.\n', True
 
-# wb_2 = openpyxl.load_workbook('C:\\Users\\jenya\\desktop\\test.xlsx')
-# sh_wb_2 = wb_2['Worksheet']
-# # #
-# title_row = list(sh_wb_2[1])
+def get_image_fields(alias: str, images_path: str):
+    site_path = "assets/images/product_images/"
+    im_names = [f'{alias}.jpg'] + [f'{alias}_{str(i)}.jpg' for i in range(1, 13)]
+    f_names = ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
+    fields = []
+    for i in range(len(im_names)):
+        if os.path.exists(os.path.join(images_path, im_names[i])):
+            fields.append((f_names[i], f'{site_path}/{im_names[i]}'))
+    return fields
 
-# print(sh_wb_2)
-# print(search_cell_font_colors(sh_wb_2))
-# m_table, m_row, _ = get_table(sh_wb_2, 2, 10)
-# update_table, _, _ = get_table(sh_wb_2, m_row, 10)
-# table_del, table_norm, table_err = separate_table(m_table, 'FFFF0000')
-#
-# start_id = max(m_table, key=lambda x: x[0].value)[0].value
-#
-# update_table = set_value(update_table, 0, start_id, True)
-# update_table = set_value(update_table, 9, '#новые поступления#', False)
-#
-# check_images('C:\\Users\jenya\Desktop\\23.03\\23.03', update_table)
-# get_file_from_table('update', update_table, title_row)
-# get_file_from_table('del', table_del, title_row)
-#     print(f"coordinate: {cell.coordinate}\tvalue: {cell.value}\tcolor: {cell.fill.start_color.index}\ttext color: {cell.font.color.index}\t")
-
-def get_query_dict(calls_names: dict, title: list):
-    return dict(sorted([(calls_names[cell.value.strip()], i) for i, cell in enumerate(title)], key=lambda x: x[1])[1:])
-
-def get_insert_queries(table: dict, query_dict: dict):
-    im_names = ['image'] + ['image_' + str(i) for i in range(1, 13)]
-    folder_path = "assets/images/product_images/"
+def get_insert_queries(images_path: str, table: list, columns_names: list):
     queries = []
+    columns = [el[0] for el in columns_names]
     for raw in table:
-        alias = str(raw[query_dict['alias']].value)
-        al_names = [alias] + [alias + '_' + str(i) for i in range(1, 13)]
-        part_1 = ", ".join(elem for elem in query_dict.keys())
-        part_1_1 = ", ".join(elem for elem in im_names)
+        alias = str(raw[columns.index('alias')].value)
+        fields = get_image_fields(alias, images_path)
+        part_1 = ", ".join(col for col in columns[1:])
+        part_1_1 = ", ".join(elem[0] for elem in fields)
         part_2 = "', '".join('' if cell.value is None else str(cell.value) for cell in raw[1:])
-        part_2_2 = "', '".join(folder_path + elem + '.jpg' for elem in al_names)
-        queries.append(f"INSERT INTO catalog({part_1}, {part_1_1}) VALUES ('{part_2}', '{part_2_2}');")
+        part_2_2 = "', '".join(elem[1] for elem in fields)
+        queries.append(f"""INSERT INTO catalog({part_1}, {part_1_1}) VALUES ('{part_2}', '{part_2_2}');""")
     return queries
+
+def get_delete_query(table: list):
+    part = ', '.join(str(raw[0].value) for raw in table)
+    return [f"""DELETE FROM catalog WHERE id IN ({part});"""]
 
 
 
