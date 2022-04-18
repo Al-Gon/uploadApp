@@ -14,6 +14,15 @@ def check_file_path(file_path: str):
 def check_folder_path(folder_path: str):
     return True if os.path.exists(folder_path) and os.path.isdir(folder_path) else False
 
+def check_file_name(name: str):
+    pattern = r'.+_\d{2}_\d{2}.{1}xlsx'
+    return True if re.findall(pattern, name) else False
+
+def make_file_name(name: str):
+    if name.endswith('.xlsx'):
+        name = name.strip().rsplit('.xlsx', 1)[0]
+    return f'{name}_{datetime.datetime.now().strftime("%d_%m")}.xlsx'
+
 def search_cell_font_colors(table: list):
     font_colors = set()
     for row in table:
@@ -27,17 +36,17 @@ def search_cell_font_colors(table: list):
     return list(font_colors)
 
 def get_worksheet(file_path: str):
-    wb_2 = openpyxl.load_workbook(file_path)
-    sh_wb_2 = wb_2['Worksheet']
-    title_row = list(sh_wb_2[1])
-    return sh_wb_2, title_row
+    wb = openpyxl.load_workbook(file_path)
+    sh = wb.active
+    title_row = list(sh[1])
+    return sh, title_row
 
 def separate_table(table: list, color: str):
     table_color, table_normal, table_error = [], [], []
     for j, row in enumerate(table):
         try:
             ind = row[0].font.color.index
-            if isinstance(ind, str) and ind == color:       # print(f'color {ind} value {raw.value}')
+            if isinstance(ind, str) and ind == color:
                 table_color.append(row)
             else:
                 table_normal.append(row)
@@ -74,7 +83,6 @@ def set_value(table: list, pos: int, val, incr: bool):
     return table
 
 def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: list):
-    file_name = file_name.strip() + '_' + datetime.datetime.now().strftime('%d_%m') + '.xlsx'
     full_path = os.path.join(folder_path, file_name)
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -83,7 +91,11 @@ def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: 
             ws.append(row)
         else:
             ws.append(list(map(lambda x: x.value, row)))
-    wb.save(full_path)
+    try:
+        wb.save(full_path)
+    except PermissionError:
+        return f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
+
     return f'Файл {file_name} успешно сохранён в папке {folder_path}.\n'
 
 def read_table(t):

@@ -31,7 +31,7 @@ def insert_query(table_: list, table_n: dict, title: list):
 def get_file_from_data(folder_path: str, file_name: str, columns: list):
     part = ", ".join(f'{elem[0]} AS {elem[1]}' for elem in columns)
     data = get_data_from_table(f"""SELECT {part} FROM catalog""")
-    return ex.get_file_from_table(folder_path, file_name, data, [elem for elem in columns[1]])
+    return ex.get_file_from_table(folder_path, file_name, data, [elem[1] for elem in columns])
 
 def get_table_columns():
     query = """PRAGMA table_info(Catalog);"""
