@@ -1,17 +1,42 @@
 #:import utils kivy.utils
 
+<ScrollLabel@ScrollView>
+    text: 'Консоль'
+    scroll_type: ['bars', 'content']
+    bar_width: 10
+    Label:
+        size_hint_y: None
+        text_size: self.width, None
+        height: self.texture_size[1]
+        padding: 20, 20
+        text: root.text
+        color: utils.get_color_from_hex('#000000')
+
 <ItemLabel@Label>
     font_size: '15sp'
+    padding: 20, 20
     halign: 'left'
     valign: 'top'
     text_size: self.size
     multiline: True
     markup: True
-
-<InputLabel@ItemLabel>
     color: utils.get_color_from_hex('#000000')
+    canvas.before:
+        Color:
+            rgba: utils.get_color_from_hex('#ffffff')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<InputLabel@Label>
+    halign: 'left'
+    valign: 'top'
+    text_size: self.size
+    multiline: True
+    markup: True
     size_hint: .3, .4
     pos_hint: {'x':.02, 'y':.5}
+    color: utils.get_color_from_hex('#000000')
 
 <InputString@TextInput>
     multiline: True
@@ -91,6 +116,7 @@
                         size: self.size
 
 <SettingLayout>
+    orientation: 'vertical'
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
     console: console
@@ -100,22 +126,23 @@
     cell_color: cell_color
     update_file_name: update_file_name
     del_file_name: del_file_name
-
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
         Rectangle:
             pos: self.pos
             size: self.size
+
     AnchorLayout:
-        pos_hint: {'x':0, 'y':0}
+        #pos_hint: {'x':0, 'y':0}
         anchor_x: 'center'
-        anchor_y: 'top'
+        anchor_y: 'center'
+        size_hint: 1, .75
+
 ##############################################
         ScrollView:
-            do_scroll_x: False
-            do_scroll_y: True
-            size_hint: 1, .75
+            scroll_type: ['bars', 'content']
+            size_hint: .96, .9
             bar_width: 10
             bar_color: utils.get_color_from_hex('#ffffff')
             bar_inactive_color: utils.get_color_from_hex('#eeeeee')
@@ -123,8 +150,8 @@
             GridLayout:
                 cols: 1
                 size_hint: 1, None
-                height: 1000
-                #minimum_height: self.height
+                height: self.minimum_height
+                padding: 10, 10
 
                 InputBlock:
                     id: save_dir_path
@@ -164,34 +191,21 @@
 
 #########################################################
     AnchorLayout:
-        pos_hint: {'x':0, 'y':0}
+        #pos_hint: {'x':0, 'y':0}
         anchor_x: 'center'
-        anchor_y: 'bottom'
+        anchor_y: 'center'
+        size_hint: 1, .25
 
-        FloatLayout:
-            size_hint: 1, .25
-
-            FloatLayout:
-                size_hint: .96, .85
-                pos_hint: {'x':.02, 'y':.1}
-                canvas:
-                    Color:
-                        rgba: utils.get_color_from_hex('#ffffff')
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                ItemLabel:
-                    id: console
-                    size_hint: .98, .9
-                    pos_hint: {'x':.01, 'y':.1}
-                    text: 'Консоль'
-                    color: utils.get_color_from_hex('#000000')
+        ItemLabel:
+            id: console
+            size_hint: .96, .85
+            pos_hint: {'x':.02, 'y':.1}
+            text: 'Консоль'
 
 <LoadLayout>
     orientation: 'vertical'
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
-    console: console
     input: input
     console: console
     step_button_1: step_button_1
@@ -207,7 +221,7 @@
         size_hint: 1, .6
         anchor_x: 'center'
         anchor_y: 'center'
-        FloatLayout:
+        BoxLayout:
             size_hint: .94, .94
             canvas:
                 Color:
@@ -215,12 +229,8 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
-            ItemLabel:
+            ScrollLabel:
                 id: console
-                size_hint: .98, .9
-                pos_hint: {'x':.01, 'y':.1}
-                text: 'Консоль'
-                color: utils.get_color_from_hex('#000000')
 
     AnchorLayout:
         size_hint: 1, .2
@@ -230,7 +240,9 @@
         TextInput:
             id: input
             size_hint: .94, .94
+            padding: 20, 20
             multiline: True
+            text: 'Поле ввода.'
             background_normal: 'white_pixel.png'
             background_active: 'white_pixel.png'
 
@@ -270,25 +282,17 @@
         size_hint: 1, .8
         anchor_x: 'center'
         anchor_y: 'center'
-        FloatLayout:
+
+        ItemLabel:
+            id: console
             size_hint: .94, .94
-            canvas:
-                Color:
-                    rgba: utils.get_color_from_hex('#ffffff')
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            ItemLabel:
-                id: console
-                size_hint: .98, .9
-                pos_hint: {'x':.01, 'y':.1}
-                text: 'Консоль'
-                color: utils.get_color_from_hex('#000000')
+            text: 'Консоль'
 
     AnchorLayout:
         size_hint: 1, .2
         anchor_x: 'center'
         anchor_y: 'center'
+
         Button:
             size_hint: .6, .5
             id: step_button
@@ -311,32 +315,26 @@
         size_hint: 1, .8
         anchor_x: 'center'
         anchor_y: 'center'
-        FloatLayout:
+
+        ItemLabel:
+            id: console
             size_hint: .94, .94
-            canvas:
-                Color:
-                    rgba: utils.get_color_from_hex('#ffffff')
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            ItemLabel:
-                id: console
-                size_hint: .98, .9
-                pos_hint: {'x':.01, 'y':.1}
-                text: 'Консоль'
-                color: utils.get_color_from_hex('#000000')
+            text: 'Консоль'
 
     AnchorLayout:
         size_hint: 1, .2
         anchor_x: 'center'
         anchor_y: 'center'
+
         BoxLayout:
             orientation: 'horizontal'
             size_hint: .6, .5
+
             Button:
                 size_hint: .5, 1
                 text: 'Выгрузка'
                 on_release: app.root.upload_step()
+
             Button:
                 size_hint: .5, 1
                 text: 'Удаление'

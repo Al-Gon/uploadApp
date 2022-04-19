@@ -3,6 +3,7 @@ import sys
 import excel_functions as ex
 import sql_functions as sql
 from kivy.resources import resource_add_path
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -14,7 +15,7 @@ from kivy.app import App
 class ScreenTemplate(Screen):
     pass
 
-class SettingLayout(FloatLayout):
+class SettingLayout(BoxLayout):
     pass
 
 class LoadLayout(BoxLayout):
@@ -150,8 +151,9 @@ class Container(FloatLayout):
         else:
             if text == 'Шаг 1':
                 self.columns = sql.get_table_columns()
-                self.load_widget.console.text = '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.columns[1:])])
-                self.load_widget.input.text = f'Введите номера выбранных колонок таблицы через запятую.' \
+                self.load_widget.console.text = 'В таблице определены следующие поля:\n'
+                self.load_widget.console.text += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.columns[1:])])
+                self.load_widget.input.text = f'Введите номера выбранных полей таблицы через запятую.' \
                                               f'\nКолонка "id" будет добавлена по умолчанию.'
                 self.load_widget.step_button_2.text = 'Шаг 2'
 
@@ -174,6 +176,7 @@ class Container(FloatLayout):
                     self.columns = [self.columns[0]] + [self.columns[num] for num in numbers]
                     self.load_widget.console.text = 'Определены следующие колонки:\n'
                     self.load_widget.console.text += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.columns)])
+                    # self.load_widget.console.texture_update()
                     self.load_widget.input.text = 'Введите представления имён выбранных колонок в файле через запятую.'
                     self.load_widget.step_button_1.text = 'Шаг 2'
                     self.load_widget.step_button_2.text = 'Шаг 3'
