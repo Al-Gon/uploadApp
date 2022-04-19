@@ -63,6 +63,7 @@ class Container(FloatLayout):
         self.settings_widget = self.settings_screen.main_screen.children[0]
         self.load_widget = self.load_screen.main_screen.children[0]
         self.handle_widget = self.handle_screen.main_screen.children[0]
+        self.upload_widget = self.upload_screen.main_screen.children[0]
 
         if len(self.store.get('save_dir_path')['path']):
             self.settings_widget.save_dir_path.input.text = self.store.get('save_dir_path')['path']
@@ -288,18 +289,36 @@ class Container(FloatLayout):
         missing = self.check_settings(['save_dir_path', 'update_file_name', 'images_path', 'columns'])
         if missing:
             self.upload_widget.console.text = self.settings_report(missing)
+        elif not self.update_table:
+            self.upload_widget.console.text = f'Нет данных для загрузки.\n' \
+                                              f'Перейдите к операции "Обработка"'
         else:
             images_path = self.store.get('images_path')['path']
             queries = ex.get_insert_queries(images_path, self.update_table, self.store.get('columns')['names'])
-            sql.make_query(queries)
+            messages = sql.make_query(queries)
+            if messages:
+                self.upload_widget.console.text = 'Произошли следующие ошибки:'
+                self.upload_widget.console.text += '\n'.join(messages)
+            else:
+                self.upload_widget.console.text = f'Было успешно добавлено {len(self.update_table)} записей.'
+                self.update_table = None
 
     def delete_step(self):
         missing = self.check_settings(['save_dir_path', 'del_file_name'])
         if missing:
             self.upload_widget.console.text = self.settings_report(missing)
+        elif not self.del_table:
+            self.upload_widget.console.text = f'Нет данных для удаления.\n' \
+                                              f'Перейдите к операции "Обработка"'
         else:
             queries = ex.get_delete_query(self.del_table)
-            sql.make_query(queries)
+            messages = sql.make_query(queries)
+            if messages:
+                self.upload_widget.console.text = 'Произошли следующие ошибки:'
+                self.upload_widget.console.text += '\n'.join(messages)
+            else:
+                self.upload_widget.console.text = f'Было успешно удалено {len(self.del_table)} записей.'
+                self.del_table = None
 
 
 class ContainerApp(App):

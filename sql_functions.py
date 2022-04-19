@@ -18,15 +18,17 @@ def get_data_from_table(query: str):
 
 def make_query(queries: list):
     db_file = 'site.db'
+    error_msg = []
     with sqlite3.connect(db_file, timeout=5) as conn:
         cursor = conn.cursor()
         for query in queries:
             try:
                 cursor.execute(query)
             except sqlite3.DatabaseError as err:
-                print("Error: ", err)
+                error_msg.append(f'Error: {err}')
             else:
                 conn.commit()
+    return error_msg
 
 def get_file_from_data(folder_path: str, file_name: str, columns: list):
     part = ", ".join(f'{elem[0]} AS {elem[1]}' for elem in columns)
