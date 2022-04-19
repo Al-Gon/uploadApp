@@ -62,8 +62,8 @@ def get_table(w_sheet, min_row: int, max_col: int):
         new_row = []
         for cell in row:
             new_row.append(cell)
+        max_row = i + min_row + 1
         if [el.value for el in new_row] == [None] * len(new_row):
-            max_row = i + min_row + 1
             break
         main_table.append(new_row)
 

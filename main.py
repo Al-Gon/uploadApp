@@ -3,7 +3,6 @@ import sys
 import excel_functions as ex
 import sql_functions as sql
 from kivy.resources import resource_add_path
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -30,9 +29,9 @@ class UploadLayout(BoxLayout):
 class NewScreenManager(ScreenManager):
     pass
 
-class Container(FloatLayout):
+class Uploader(FloatLayout):
     def __init__(self, **kwargs):
-        super(Container, self).__init__(**kwargs)
+        super(Uploader, self).__init__(**kwargs)
         self.settings_screen = ScreenTemplate(name='screen1')
         self.settings_screen.text_label.text = '[size=18]Настройки[/size]'
         self.settings_screen.main_screen.add_widget(SettingLayout())
@@ -321,10 +320,10 @@ class Container(FloatLayout):
                 self.del_table = None
 
 
-class ContainerApp(App):
+class UploaderApp(App):
 
     def build(self):
-        return Container()
+        return Uploader()
 
 
 if __name__ == '__main__':
@@ -345,4 +344,4 @@ if __name__ == '__main__':
         file.close()
 
     Window.size = (700, 700)
-    ContainerApp().run()
+    UploaderApp().run()
