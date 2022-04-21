@@ -2,6 +2,7 @@ import openpyxl
 import datetime
 import os
 import re
+import json
 
 def check_file_path(file_path: str):
     try:
@@ -155,5 +156,27 @@ def get_delete_query(table: list):
     part = ', '.join(str(raw[0].value) for raw in table)
     return [f"""DELETE FROM catalog WHERE id IN ({part});"""]
 
+def check_version(version: str):
+    json_str = {
+                "uploader": {"version": version},
+                "save_dir_path": {"path": ""},
+                "file_name": {"name": ""},
+                "images_path": {"path": ""},
+                "cell_color": {"value": ""},
+                "update_file_name": {"name": ""},
+                "del_file_name": {"name": ""},
+                "columns": {"names": []}
+                }
+
+    version_ = ''
+    if check_file_path('settings.json'):
+        with open('settings.json') as json_file:
+            data = json.load(json_file)
+            if 'uploader' in data.keys():
+                version_ = data['uploader']['version']
+
+    if not check_file_path('settings.json') or version_ != version:
+        with open('settings.json', 'w', encoding='utf-8',) as file:
+            file.write(json.dumps(json_str))
 
 

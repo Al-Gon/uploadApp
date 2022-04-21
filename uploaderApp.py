@@ -330,18 +330,6 @@ if __name__ == '__main__':
     if hasattr(sys, '_MEIPASS'):
         resource_add_path(os.path.join(sys._MEIPASS))
 
-    if not ex.check_file_path('settings.json'):
-        file = open('settings.json', 'w', encoding='utf-8',)
-        file.write('{\
-                    "save_dir_path": {"path": ""},\
-                    "file_name": {"name": ""},\
-                    "images_path": {"path": ""},\
-                    "cell_color": {"value": ""},\
-                    "update_file_name": {"name": ""},\
-                    "del_file_name": {"name": ""},\
-                    "columns": {"names": []}\
-                    }')
-        file.close()
-
+    ex.check_version(version='1.0.0')
     Window.size = (700, 700)
     UploaderApp().run()
