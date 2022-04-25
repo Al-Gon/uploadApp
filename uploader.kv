@@ -12,7 +12,7 @@
         text: root.text
         color: utils.get_color_from_hex('#000000')
 
-<ItemLabel@Label>
+<ItemLabel>
     font_size: '15sp'
     padding: 20, 20
     halign: 'left'
@@ -21,6 +21,7 @@
     multiline: True
     markup: True
     color: utils.get_color_from_hex('#000000')
+    text: self.message
     canvas.before:
         Color:
             rgba: utils.get_color_from_hex('#ffffff')
@@ -40,6 +41,7 @@
 
 <InputString@TextInput>
     multiline: True
+    markup: True
     background_normal: 'white_pixel.png'
     background_active: 'white_pixel.png'
     size_hint: .66, .4
@@ -48,15 +50,16 @@
 <CheckSaveButton@Button>
     size_hint: .3, .3
     pos_hint: {'x':.68, 'y':.1}
-    text: 'Проверить/Сохранить'
+    #text: 'Проверить/Сохранить'
 
-<InputBlock@FloatLayout>
+<InputBlock>
     padding: [5, 5, 5, 5]
     size_hint: 1, None
     height: 120
     text_label: ''
-    input_string: ''
+    #input_string: ''
     button_name: ''
+    button_text: 'Проверить/Сохранить'
     input: input
 
     InputLabel:
@@ -68,7 +71,76 @@
 
     CheckSaveButton:
         name: root.button_name
+        text: root.button_text
         on_release: app.root.handle_path(self.name)
+
+<CheckBoxColors>
+    cols: 4
+    padding: [5, 5, 5, 5]
+    size_hint: 1, None
+    height: 50
+    color: utils.get_color_from_hex('#000000')
+    text_color: text_color
+    fill_color: fill_color
+
+    Label:
+        text: 'Цвет заливки ячеек'
+        color: root.color
+
+    CheckBox:
+        id: fill_color
+        name: 'fill_color'
+        group: 'checkbox_colors'
+        active: False
+        color: root.color
+        allow_no_selection: False
+
+    Label:
+        text: 'Цвет шрифта ячеек'
+        color: root.color
+
+    CheckBox:
+        id: text_color
+        name: 'text_color'
+        group: 'checkbox_colors'
+        active: False
+        color: root.color
+        allow_no_selection: False
+
+<ButtonGetColors>
+    padding: [5, 5, 5, 5]
+    size_hint: 1, None
+    height: 50
+    button_text: ''
+    Button:
+        pos_hint: {'x':.58, 'y':.1}
+        size_hint: .4, .75
+        text: root.button_text
+        on_release: app.root.get_cell_colors(self.text)
+
+<ChooseColorItem>:
+    cols: 2
+    size_hint: 1, None
+    height: 50
+    padding: [5, 5, 5, 5]
+    active: False
+    check_box: check_box
+
+    Label:
+        height: 50
+        canvas.before:
+            Color:
+                rgba: utils.get_color_from_hex(self.parent.label_color)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+    CheckBox:
+        id: check_box
+        group: 'choose_color'
+        active: root.active
+        color: utils.get_color_from_hex('#000000')
+        #on_active: app.root.choose_cell_color(root.label_color)
+        allow_no_selection: False
 
 
 <ScreenTemplate>
@@ -123,9 +195,12 @@
     save_dir_path: save_dir_path
     file_name: file_name
     images_path: images_path
-    cell_color: cell_color
     update_file_name: update_file_name
     del_file_name: del_file_name
+    checkbox_colors: checkbox_colors
+    choose_color: choose_color
+    get_colors: get_colors
+
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
@@ -150,7 +225,8 @@
             GridLayout:
                 cols: 1
                 size_hint: 1, None
-                height: self.minimum_height
+                #height: self.minimum_height
+                height: 1000
                 padding: 10, 10
 
                 InputBlock:
@@ -172,12 +248,6 @@
                     button_name: 'images_path_button'
 
                 InputBlock:
-                    id: cell_color
-                    text_label: 'Цвет шрифта ячеек для удаления:'
-                    input_string: 'Введите цвет шрифта ячеек для удаления'
-                    button_name: 'cell_color_button'
-
-                InputBlock:
                     id: update_file_name
                     text_label: 'Имя файла для загрузки данных в базу:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
@@ -188,6 +258,17 @@
                     text_label: 'Имя файла для удаления данных из базы:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'del_file_name_button'
+
+                CheckBoxColors:
+                    id: checkbox_colors
+
+                ButtonGetColors:
+                    id: get_colors
+                    button_text: 'Получить цвет шрифта ячеек'
+
+                ChooseColor:
+                    id: choose_color
+
 
 #########################################################
     AnchorLayout:
@@ -200,7 +281,7 @@
             id: console
             size_hint: .96, .85
             pos_hint: {'x':.02, 'y':.1}
-            text: 'Консоль'
+            message: 'Консоль'
 
 <LoadLayout>
     orientation: 'vertical'
@@ -286,7 +367,7 @@
         ItemLabel:
             id: console
             size_hint: .94, .94
-            text: 'Консоль'
+            message: 'Консоль'
 
     AnchorLayout:
         size_hint: 1, .2
@@ -319,7 +400,7 @@
         ItemLabel:
             id: console
             size_hint: .94, .94
-            text: 'Консоль'
+            message: 'Консоль'
 
     AnchorLayout:
         size_hint: 1, .2

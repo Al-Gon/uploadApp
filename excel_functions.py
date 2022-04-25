@@ -29,12 +29,25 @@ def search_cell_font_colors(table: list):
     for row in table:
         for cell in row:
             try:
-                ind = cell.font.color.index
-                if isinstance(ind, str):
-                    font_colors.add(ind)
+                color = cell.font.color.rgb
+                if isinstance(color, str):
+                    font_colors.add(color[2:])
             except AttributeError:
                 print(cell)
     return list(font_colors)
+
+def search_cell_fill_colors(table: list):
+    fill_colors = set()
+    for row in table:
+        for cell in row:
+            if cell.fill.fill_type is not None:
+                try:
+                    color = cell.fill.fgColor.rgb
+                    if isinstance(color, str):
+                        fill_colors.add(color[2:])
+                except AttributeError:
+                    print(cell)
+    return list(fill_colors)
 
 def get_worksheet(file_path: str):
     wb = openpyxl.load_workbook(file_path)
@@ -42,12 +55,16 @@ def get_worksheet(file_path: str):
     title_row = list(sh[1])
     return sh, title_row
 
-def separate_table(table: list, color: str):
+def separate_table(table: list, color: str, c_type: str):
     table_color, table_normal, table_error = [], [], []
     for j, row in enumerate(table):
         try:
-            ind = row[0].font.color.index
-            if isinstance(ind, str) and ind == color:
+            ind = None
+            if c_type == 'text':
+                ind = row[0].font.color.rgb
+            if c_type == 'fill':
+                ind = row[0].fill.fgColor.rgb
+            if isinstance(ind, str) and ind == 'FF' + color:
                 table_color.append(row)
             else:
                 table_normal.append(row)
@@ -162,7 +179,8 @@ def check_version(version: str):
                 "save_dir_path": {"path": ""},
                 "file_name": {"name": ""},
                 "images_path": {"path": ""},
-                "cell_color": {"value": ""},
+                "cell_color": {"type": "",
+                               "value": ""},
                 "update_file_name": {"name": ""},
                 "del_file_name": {"name": ""},
                 "columns": {"names": []}
