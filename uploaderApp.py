@@ -7,6 +7,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
+from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import StringProperty, ListProperty, ObjectProperty
 from kivy.storage.jsonstore import JsonStore
@@ -42,13 +43,14 @@ class ChooseColor(GridLayout):
     def choose_color(self, instance, is_active):
         self.color = instance.parent.label_color
 
-
 class CheckBoxColors(GridLayout):
     text_color = ObjectProperty()
     fill_color = ObjectProperty()
 
-
 class ItemLabel(Label):
+    message = StringProperty('')
+
+class ScrollLabel(ScrollView):
     message = StringProperty('')
 
 class InputBlock(FloatLayout):
@@ -138,8 +140,6 @@ class Uploader(FloatLayout):
             self.load_widget.console.message += f'\nЕсли нужно выгрузить данные из данных колонок в файл нажмите "Шаг 4".'\
                                              f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
 
-
-
     def check_settings(self, settings: list):
         missing = []
         for setting in settings:
@@ -167,7 +167,6 @@ class Uploader(FloatLayout):
         else:
             input_obj.text = 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
             self.settings_widget.console.message = 'Имя файла указано не верно.'
-
 
     def handle_path(self, name: str):
         if name == 'save_dir_path_button':

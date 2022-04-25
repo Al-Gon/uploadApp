@@ -1,7 +1,7 @@
 #:import utils kivy.utils
 
-<ScrollLabel@ScrollView>
-    text: 'Консоль'
+<ScrollLabel>
+    massage: 'Консоль'
     scroll_type: ['bars', 'content']
     bar_width: 10
     Label:
@@ -9,7 +9,7 @@
         text_size: self.width, None
         height: self.texture_size[1]
         padding: 20, 20
-        text: root.text
+        text: root.message
         color: utils.get_color_from_hex('#000000')
 
 <ItemLabel>
@@ -141,7 +141,6 @@
         color: utils.get_color_from_hex('#000000')
         #on_active: app.root.choose_cell_color(root.label_color)
         allow_no_selection: False
-
 
 <ScreenTemplate>
     main_screen: main_screen
