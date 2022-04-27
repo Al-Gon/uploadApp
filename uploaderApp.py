@@ -14,8 +14,14 @@ from kivy.storage.jsonstore import JsonStore
 from kivy.core.window import Window
 from kivy.app import App
 
-class ButtonGetColors(FloatLayout):
+class ButtonBlock(FloatLayout):
+    pass
+
+class ButtonGetColors(ButtonBlock):
     button_text = StringProperty('')
+    pass
+
+class ButtonSaveColor(ButtonBlock):
     pass
 
 class ChooseColorItem(GridLayout):
@@ -189,46 +195,42 @@ class Uploader(FloatLayout):
         self.settings_widget.choose_color.items = []
         self.settings_widget.console.message = ''
 
+    def save_cell_color(self):
+        color = self.settings_widget.choose_color.color
+        message = f'Выбран цвет [b][color=#{color}]{color}[/color][/b] '
+        c_type = ''
+        if self.settings_widget.checkbox_colors.text_color.active:
+            c_type = 'text'
+            message += f'текста выделенных ячеек'
+        elif self.settings_widget.checkbox_colors.fill_color.active:
+            c_type = 'fill'
+            message += f'заливки выделенных ячеек'
+        self.store['cell_color'] = {'type': c_type, 'value': color}
+        self.settings_widget.console.message = message
+        self.settings_widget.choose_color.items = [color]
+        self.settings_widget.choose_color.remove_widget(ButtonSaveColor())
+        self.handle_widget.step_button.text = 'Шаг 1'
+        self.handle_widget.console.message = 'Консоль'
+
     def get_cell_colors(self, name):
-        print(self.keeper['table'])
         if 'table' in self.keeper.keys():
+            colors = []
             if name == 'Получить цвет шрифта ячеек':
                 colors = ex.search_cell_font_colors(self.keeper['table'])
                 if colors:
                     self.settings_widget.console.message = f'Цвета шрифта выделенных ячеек:\n'
-                    self.settings_widget.console.message += ', '.join(f'[b][color=#{c}]{c}[/color][/b]' for c in colors)
-                    self.settings_widget.choose_color.items = colors
-                    button = ButtonGetColors()
-                    button.button_text = 'Сохранить'
-                    self.settings_widget.choose_color.add_widget(button)
                 else:
                     self.settings_widget.console.message = f'В файле отсутствуют ячейки выделенные цветом шрифта.\n'
             if name == 'Получить цвет заливки ячеек':
                 colors = ex.search_cell_fill_colors(self.keeper['table'])
                 if colors:
                     self.settings_widget.console.message = f'Цвета заливки выделенных ячеек:\n'
-                    self.settings_widget.console.message += ', '.join(f'[b][color=#{c}]{c}[/color][/b]' for c in colors)
-                    self.settings_widget.choose_color.items = colors
-                    button = ButtonGetColors()
-                    button.button_text = 'Сохранить'
-                    self.settings_widget.choose_color.add_widget(button)
                 else:
                     self.settings_widget.console.message = f'В файле отсутствуют ячейки выделенные цветом заливки.\n'
-            if name == 'Сохранить':
-                color = self.settings_widget.choose_color.color
-                message = f'Выбран цвет [b][color=#{color}]{color}[/color][/b] '
-                c_type = ''
-                if self.settings_widget.checkbox_colors.text_color.active:
-                    c_type = 'text'
-                    message += f'текста выделенных ячеек'
-                elif self.settings_widget.checkbox_colors.fill_color.active:
-                    c_type = 'fill'
-                    message += f'заливки выделенных ячеек'
-                self.store['cell_color'] = {'type': c_type, 'value': color}
-                self.settings_widget.console.message = message
-                self.settings_widget.choose_color.items = [color]
-                self.handle_widget.step_button.text = 'Шаг 1'
-                self.handle_widget.console.message = ''
+            if colors:
+                self.settings_widget.console.message += ', '.join(f'[b][color=#{c}]{c}[/color][/b]' for c in colors)
+                self.settings_widget.choose_color.items = colors
+                self.settings_widget.choose_color.add_widget(ButtonSaveColor())
         else:
             self.settings_widget.console.message = 'Перейдите на вкладку "Обработка" и выполните "Шаг 1".'
 

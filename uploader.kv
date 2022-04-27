@@ -107,16 +107,25 @@
         color: root.color
         allow_no_selection: False
 
-<ButtonGetColors>
+<ButtonBlock>
     padding: [5, 5, 5, 5]
     size_hint: 1, None
     height: 50
+
+<ButtonGetColors>
     button_text: ''
     Button:
         pos_hint: {'x':.58, 'y':.1}
         size_hint: .4, .75
         text: root.button_text
         on_release: app.root.get_cell_colors(self.text)
+
+<ButtonSaveColor>
+    Button:
+        pos_hint: {'x':.58, 'y':.1}
+        size_hint: .4, .75
+        text: 'Сохранить'
+        on_release: app.root.save_cell_color()
 
 <ChooseColorItem>:
     cols: 2
@@ -139,7 +148,6 @@
         group: 'choose_color'
         active: root.active
         color: utils.get_color_from_hex('#000000')
-        #on_active: app.root.choose_cell_color(root.label_color)
         allow_no_selection: False
 
 <ScreenTemplate>
@@ -213,7 +221,6 @@
         anchor_y: 'center'
         size_hint: 1, .75
 
-##############################################
         ScrollView:
             scroll_type: ['bars', 'content']
             size_hint: .96, .9
@@ -268,8 +275,6 @@
                 ChooseColor:
                     id: choose_color
 
-
-#########################################################
     AnchorLayout:
         #pos_hint: {'x':0, 'y':0}
         anchor_x: 'center'
