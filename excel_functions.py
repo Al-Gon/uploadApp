@@ -59,12 +59,12 @@ def separate_table(table: list, color: str, c_type: str):
     table_color, table_normal, table_error = [], [], []
     for j, row in enumerate(table):
         try:
-            ind = None
+            color_ = None
             if c_type == 'text':
-                ind = row[0].font.color.rgb
+                color_ = row[0].font.color.rgb
             if c_type == 'fill':
-                ind = row[0].fill.fgColor.rgb
-            if isinstance(ind, str) and ind == 'FF' + color:
+                color_ = row[0].fill.fgColor.rgb
+            if isinstance(color_, str) and color_ == 'FF' + color:
                 table_color.append(row)
             else:
                 table_normal.append(row)
@@ -123,27 +123,24 @@ def check_images(path: str, table: list):
     images = set()
     if os.path.exists(path):
         for f_name in os.listdir(path):
-            re_part = re.findall(template, f_name)[0]
-            if f_name != re_part:
+            re_part = re.findall(template, f_name)
+            if re_part and f_name != re_part[0]:
                 if os.path.isfile(os.path.join(path, f_name)):
-                    os.rename(os.path.join(path, f_name), os.path.join(path, re_part))
-                    print(f'File {f_name} was renamed to {re_part}')
+                    os.rename(os.path.join(path, f_name), os.path.join(path, re_part[0]))
+                    print(f'File {f_name} was renamed to {re_part[0]}')
 
             if f_name.endswith('.jpg'):
                 images.add(f_name.split('.')[0].split('_')[0])
     articles = set(map(lambda x: x[2].value, table))
 
     if len(articles) != len(images):
-        return f'Количество записей: в файле {len(articles)} в папке {len(images)}', False
-        # print(f'Different files numbers: in table {len(articles)} in folder {len(images)}')
+        return f'Количество записей: в файле {len(articles)} в папке с фотографиями {len(images)}.\n', False
     diff = articles.symmetric_difference(images)
     for el in diff:
         if el in articles and el not in images:
             return f'Записи с артикулом {el} в таблице не соответствует ни одной фотографии.\n', False
-            # print(f'Article {el} in table have not images')
         if el in images and el not in articles:
             return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
-            # print(f'Image {el} in folder have not rows in table')
     return f'Фотографии успешно проверены.\n', True
 
 def get_image_fields(alias: str, images_path: str):
