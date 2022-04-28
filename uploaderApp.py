@@ -9,19 +9,16 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import StringProperty, ListProperty, ObjectProperty
+from kivy.properties import StringProperty, ListProperty, ObjectProperty, NumericProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.core.window import Window
 from kivy.app import App
 
-class ButtonBlock(FloatLayout):
-    pass
-
-class ButtonGetColors(ButtonBlock):
+class ButtonGetColors(FloatLayout):
     button_text = StringProperty('')
     pass
 
-class ButtonSaveColor(ButtonBlock):
+class ButtonSaveColor(FloatLayout):
     pass
 
 class ChooseColorItem(GridLayout):
@@ -32,8 +29,16 @@ class ChooseColor(GridLayout):
     cols = 1
     padding: [5, 5, 5, 5]
     size_hint = (1, None)
+    save_button = ObjectProperty()
     items = ListProperty([])
     color = StringProperty('')
+    height = NumericProperty()
+
+    def set_height(self):
+        height = 0
+        for child in self.children:
+            height += child.height
+        self.height = height + 10
 
     def on_items(self, instance, items):
         self.clear_widgets()
@@ -45,10 +50,19 @@ class ChooseColor(GridLayout):
                 self.color = item
             new_item.check_box.bind(active=self.choose_color)
             self.add_widget(new_item)
-            self.height = self.minimum_height
+            self.set_height()
 
     def choose_color(self, instance, is_active):
         self.color = instance.parent.label_color
+
+    def add_button(self):
+        self.save_button = ButtonSaveColor()
+        self.add_widget(self.save_button)
+        self.set_height()
+
+    def remove_button(self):
+        self.remove_widget(self.save_button)
+        self.set_height()
 
 class CheckBoxColors(GridLayout):
     text_color = ObjectProperty()
@@ -67,6 +81,7 @@ class ScreenTemplate(Screen):
     pass
 
 class SettingLayout(BoxLayout):
+    grid_height = NumericProperty()
     pass
 
 class LoadLayout(BoxLayout):
@@ -123,6 +138,7 @@ class Uploader(FloatLayout):
 
         self.settings_widget.checkbox_colors.fill_color.bind(active=self.check_cell_colors)
         self.settings_widget.checkbox_colors.text_color.bind(active=self.check_cell_colors)
+        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
 
         if len(self.store.get('columns')['names']):
             self.keeper['columns'] = self.store.get('columns')['names']
@@ -130,6 +146,13 @@ class Uploader(FloatLayout):
             self.load_widget.console.message += '\n'.join([f'{i}. {col[0]} "{col[1]}"' for i, col in enumerate(self.keeper['columns'])])
             self.load_widget.console.message += f'\nЕсли нужно выгрузить данные из данных колонок в файл нажмите "Шаг 4".'\
                                              f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
+
+    @staticmethod
+    def grid_height(inst):
+        height = 0
+        for child in inst.children:
+            height += child.height
+        return height + 25
 
     def check_settings(self, settings: list):
         missing = []
@@ -160,7 +183,6 @@ class Uploader(FloatLayout):
             self.settings_widget.console.message = 'Имя файла указано не верно.'
 
     def handle_path(self, name: str):
-
         if name == 'save_dir_path_button':
             if ex.check_folder_path(self.settings_widget.save_dir_path.input.text):
                 self.store.put('save_dir_path', path=self.settings_widget.save_dir_path.input.text)
@@ -193,6 +215,8 @@ class Uploader(FloatLayout):
         if instance.name == 'fill_color':
             self.settings_widget.get_colors.button_text = 'Получить цвет заливки ячеек'
         self.settings_widget.choose_color.items = []
+        self.settings_widget.choose_color.set_height()
+        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
         self.settings_widget.console.message = ''
 
     def save_cell_color(self):
@@ -208,7 +232,8 @@ class Uploader(FloatLayout):
         self.store['cell_color'] = {'type': c_type, 'value': color}
         self.settings_widget.console.message = message
         self.settings_widget.choose_color.items = [color]
-        self.settings_widget.choose_color.remove_widget(ButtonSaveColor())
+        self.settings_widget.choose_color.remove_button()
+        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
         self.handle_widget.step_button.text = 'Шаг 1'
         self.handle_widget.console.message = 'Консоль'
 
@@ -230,7 +255,8 @@ class Uploader(FloatLayout):
             if colors:
                 self.settings_widget.console.message += ', '.join(f'[b][color=#{c}]{c}[/color][/b]' for c in colors)
                 self.settings_widget.choose_color.items = colors
-                self.settings_widget.choose_color.add_widget(ButtonSaveColor())
+                self.settings_widget.choose_color.add_button()
+                self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
         else:
             self.settings_widget.console.message = 'Перейдите на вкладку "Обработка" и выполните "Шаг 1".'
 
@@ -282,7 +308,7 @@ class Uploader(FloatLayout):
                     temp = f'{{}}. {{:>{m1 + 2}}} -- {{:<{m2 + 2}}}'
                     self.load_widget.console.message += '\n'.join([temp.format(i + 1, *col) for i, col in enumerate(self.keeper['columns'])])
                     self.load_widget.console.message += f'\nНажмите кнопку "Шаг 4" чтобы выгрузить данные в файл.' \
-                                                     f'\nНажмите кнопку "Шаг 1" если хотите изменить выбранные колонки.'
+                                                        f'\nНажмите кнопку "Шаг 1" если хотите изменить выбранные колонки.'
                     self.load_widget.input.text = ''
                     self.store.put('columns', names=self.keeper['columns'])
                     self.load_widget.step_button_1.text = 'Шаг 1'
