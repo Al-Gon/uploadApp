@@ -13,6 +13,13 @@ from kivy.properties import StringProperty, ListProperty, ObjectProperty, Numeri
 from kivy.storage.jsonstore import JsonStore
 from kivy.core.window import Window
 from kivy.app import App
+from kivy.lang import Builder
+
+Builder.load_file('base_widgets.kv')
+Builder.load_file('setting_layout.kv')
+Builder.load_file('handle_layout.kv')
+Builder.load_file('load_layout.kv')
+Builder.load_file('upload_layout.kv')
 
 class ButtonGetColors(FloatLayout):
     button_text = StringProperty('')

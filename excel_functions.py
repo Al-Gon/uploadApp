@@ -102,6 +102,7 @@ def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: 
     full_path = os.path.join(folder_path, file_name)
     wb = openpyxl.Workbook()
     ws = wb.active
+    ws.title = 'Main'
     for row in [top_row] + table:
         if isinstance(row[0], str) or isinstance(row[0], int):
             ws.append(row)
@@ -152,6 +153,20 @@ def get_image_fields(alias: str, images_path: str):
         if os.path.exists(os.path.join(images_path, im_names[i])):
             fields.append((f_names[i], f'{site_path}/{im_names[i]}'))
     return fields
+
+def compare_list(list_a: list, list_b):
+    return [i for i in range(len(list_a)) if list_a[i] not in list_b]
+
+def get_col_by_name(folder_name: str, file_name: str, name: str):
+    wb = openpyxl.load_workbook(os.path.join(folder_name, file_name))
+    sh = wb.active
+    columns_names = next(sh.values)
+    if name in columns_names:
+        for col in sh.iter_cols(values_only=True):
+            if col[0] == name:
+                return list(col[1:])
+    else:
+        return []
 
 def get_insert_queries(images_path: str, table: list, columns_names: list):
     queries = []
