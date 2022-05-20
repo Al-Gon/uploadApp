@@ -7,12 +7,15 @@
     console: console
     save_dir_path: save_dir_path
     file_name: file_name
-    images_path: images_path
+    images_folder_name: images_folder_name
     update_file_name: update_file_name
     del_file_name: del_file_name
     checkbox_colors: checkbox_colors
     choose_color: choose_color
     get_colors: get_colors
+    category_site_file_name: category_site_file_name
+    data_site_file_name: data_site_file_name
+    category_site_urls: category_site_urls
     grid: grid
 
     canvas:
@@ -55,10 +58,10 @@
                     button_name: 'file_name_button'
 
                 InputBlock:
-                    id: images_path
-                    text_label: 'Путь к папке с фото:'
-                    input_string: 'Введите путь к папке с фото'
-                    button_name: 'images_path_button'
+                    id: images_folder_name
+                    text_label: 'Имя папки с фото:'
+                    input_string: 'Введите имя папки с фото'
+                    button_name: 'images_folder_name_button'
 
                 InputBlock:
                     id: update_file_name
@@ -81,6 +84,24 @@
 
                 ChooseColor:
                     id: choose_color
+
+                InputBlock:
+                    id: category_site_file_name
+                    text_label: 'Имя файла для категорий данных сайта:'
+                    input_string: 'Введите имя файла (будет преобразованно к "имя_сайт_месяц_дата.xlsx").'
+                    button_name: 'category_site_file_name_button'
+
+                InputBlock:
+                    id: data_site_file_name
+                    text_label: 'Имя файла для данных сайта:'
+                    input_string: 'Введите имя файла (будет преобразованно к "имя_сайт_месяц_дата.xlsx").'
+                    button_name: 'data_site_file_name_button'
+
+                InputBlock:
+                    id: category_site_urls
+                    text_label: 'Полные url-адреса страниц категорий сайтов:'
+                    input_string: 'Введите url адреса страниц категорий сайтов (через запятую).'
+                    button_name: 'category_site_urls_button'
 
     AnchorLayout:
         #pos_hint: {'x':0, 'y':0}

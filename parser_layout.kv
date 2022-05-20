@@ -1,0 +1,94 @@
+#:import utils kivy.utils
+
+<ParserLayout>
+    orientation: 'vertical'
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    step_button: step_button
+    console: console
+    choose_url: choose_url
+    input_field: input_field
+    grid: grid
+
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        #pos_hint: {'x':0, 'y':0}
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .2
+
+        ScrollView:
+            scroll_type: ['bars', 'content']
+            size_hint: .96, .9
+            bar_width: 10
+            bar_color: utils.get_color_from_hex('#ffffff')
+            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
+
+            GridLayout:
+                id: grid
+                cols: 1
+                size_hint: 1, None
+                height: root.grid_height
+                padding: 10, 10
+
+                ChooseUrl:
+                    id: choose_url
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .4
+
+        ScrollView:
+            scroll_type: ['bars', 'content']
+            do_scroll_x: False
+            do_scroll_y: True
+            size_hint: .96, .96
+            bar_width: 10
+            bar_color: utils.get_color_from_hex('#ffffff')
+            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
+
+            TextInput:
+                id: input_field
+                size_hint: 1, None
+                height: self.parent.height
+                padding: 10, 10
+                multiline: True
+                markup: True
+                background_normal: 'white_pixel.png'
+                background_active: 'white_pixel.png'
+
+
+
+    AnchorLayout:
+        #pos_hint: {'x':0, 'y':0}
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .25
+
+        ItemLabel:
+            id: console
+            size_hint: .96, .85
+            pos_hint: {'x':.02, 'y':.1}
+            message: 'Консоль'
+
+    AnchorLayout:
+        size_hint: 1, .15
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+
+            Button:
+                size_hint: .2, 1
+                id: step_button
+                text: 'Шаг 1'
+                on_release: app.root.parser_press_step(self.text)

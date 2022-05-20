@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import json
+import parser_functions as pr
 
 def check_file_path(file_path: str):
     try:
@@ -12,17 +13,41 @@ def check_file_path(file_path: str):
         return False
     return True
 
-def check_folder_path(folder_path: str):
-    return True if os.path.exists(folder_path) and os.path.isdir(folder_path) else False
+def check_folder_path(folder_path: str) -> bool:
+    """Creates folder if it not exists."""
+    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+        return True
+    else:
+        try:
+            os.mkdir(folder_path)
+            return check_folder_path(folder_path)
+        except WindowsError:
+            return False
+
 
 def check_file_name(name: str):
-    pattern = r'.+_\d{2}_\d{2}.{1}xlsx'
-    return True if re.findall(pattern, name) else False
+    pattern = r'.*_\d{2}_\d{2}.{1}xlsx'
+    return True if not name or re.findall(pattern, name) else False
 
-def make_file_name(name: str):
+def make_file_name(name: str, substr: bool = False):
+    """Returns the file name with xlsx extension as a string """
+    date = f'_{datetime.datetime.now().strftime("%d_%m")}'
+    site = ''
     if name.endswith('.xlsx'):
         name = name.strip().rsplit('.xlsx', 1)[0]
-    return f'{name}_{datetime.datetime.now().strftime("%d_%m")}.xlsx'
+    if substr:
+        site = '_{site}'
+        # url = f'_{url.lstrip("https://").split("/")[0].replace(".", "_")}'
+    return f'{name}{site}{date}.xlsx'
+
+def del_dir_files(dir_path: str) -> bool:
+    """Returns True if dir is empty."""
+    for file in os.listdir(dir_path):
+        os.remove(os.path.join(dir_path, file))
+    if os.listdir(dir_path):
+        return del_dir_files(dir_path)
+    else:
+        return True
 
 def search_cell_font_colors(table: list):
     font_colors = set()
@@ -103,21 +128,17 @@ def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Main'
+    error_msg = []
     for row in [top_row] + table:
         if isinstance(row[0], str) or isinstance(row[0], int):
             ws.append(row)
         else:
-            ws.append(list(map(lambda x: x.value, row)))
+            ws.append(row)
     try:
         wb.save(full_path)
     except PermissionError:
-        return f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
-
-    return f'Файл {file_name} успешно сохранён в папке {folder_path}.\n'
-
-def read_table(t):
-    for row in t:
-        print(list(map(lambda x: x.value, row)))
+        error_msg = f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
+    return error_msg
 
 def check_images(path: str, table: list):
     template = r'[A-Z]+\d+[A-Z]+.+'
@@ -144,58 +165,42 @@ def check_images(path: str, table: list):
             return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
     return f'Фотографии успешно проверены.\n', True
 
-def get_image_fields(alias: str, images_path: str):
+def get_image_fields(alias: str, images_paths: list) -> tuple:
+    """
+    Returns list of tuples, if length of paths smaller than 12 list will be added elements like empty string
+    :param alias:
+    :param images_paths:
+    :return:
+    """
+    num = 13
+    if len(images_paths) > num:
+        images_paths = images_paths[: num - 1]
     site_path = "assets/images/product_images/"
-    im_names = [f'{alias}.jpg'] + [f'{alias}_{str(i)}.jpg' for i in range(1, 13)]
-    f_names = ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
-    fields = []
-    for i in range(len(im_names)):
-        if os.path.exists(os.path.join(images_path, im_names[i])):
-            fields.append((f_names[i], f'{site_path}/{im_names[i]}'))
-    return fields
-
-def compare_list(list_a: list, list_b):
-    return [i for i in range(len(list_a)) if list_a[i] not in list_b]
-
-def get_col_by_name(folder_name: str, file_name: str, name: str):
-    wb = openpyxl.load_workbook(os.path.join(folder_name, file_name))
-    sh = wb.active
-    columns_names = next(sh.values)
-    if name in columns_names:
-        for col in sh.iter_cols(values_only=True):
-            if col[0] == name:
-                return list(col[1:])
-    else:
-        return []
-
-def get_insert_queries(images_path: str, table: list, columns_names: list):
-    queries = []
-    columns = [el[0] for el in columns_names]
-    for raw in table:
-        alias = str(raw[columns.index('alias')].value)
-        fields = get_image_fields(alias, images_path)
-        part_1 = ", ".join(col for col in columns[1:])
-        part_1_1 = ", ".join(elem[0] for elem in fields)
-        part_2 = "', '".join('' if cell.value is None else str(cell.value) for cell in raw[1:])
-        part_2_2 = "', '".join(elem[1] for elem in fields)
-        queries.append(f"""INSERT INTO catalog({part_1}, {part_1_1}) VALUES ('{part_2}', '{part_2_2}');""")
-    return queries
-
-def get_delete_query(table: list):
-    part = ', '.join(str(raw[0].value) for raw in table)
-    return [f"""DELETE FROM catalog WHERE id IN ({part});"""]
+    file_names = [f'{alias}.jpg'] + [f'{alias}_{str(i)}.jpg' for i in range(1, len(images_paths))]
+    values = [site_path + f_name for f_name in file_names]
+    if len(values) < num:
+        values += [''] * (num - len(values))
+    fields_names = ['image'] + [f'image_{str(i)}' for i in range(1, num)]
+    return images_paths, file_names, values, fields_names
 
 def check_version(version: str):
     json_str = {
                 "uploader": {"version": version},
                 "save_dir_path": {"path": ""},
                 "file_name": {"name": ""},
-                "images_path": {"path": ""},
+                "images_folder_name": {"name": ""},
                 "cell_color": {"type": "",
                                "value": ""},
                 "update_file_name": {"name": ""},
                 "del_file_name": {"name": ""},
-                "columns": {"names": []}
+                "columns": {"names": []},
+                "category_site_file_name": {"name": ""},
+                "data_site_file_name": {"name": ""},
+                "category_site_urls": {"urls": {}},
+                "functions_names": {"names": ["get_categories",
+                                              "get_products",
+                                              "get_item_content",
+                                              "get_item_images"]}
                 }
 
     version_ = ''
@@ -208,5 +213,3 @@ def check_version(version: str):
     if not check_file_path('settings.json') or version_ != version:
         with open('settings.json', 'w', encoding='utf-8',) as file:
             file.write(json.dumps(json_str))
-
-
