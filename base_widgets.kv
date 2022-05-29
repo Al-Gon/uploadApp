@@ -149,48 +149,6 @@
         color: utils.get_color_from_hex('#000000')
         allow_no_selection: False
 
-<ChooseUrlItem>:
-    cols: 2
-    size_hint: 1, None
-    height: 50
-    padding: [5, 5, 5, 5]
-    active: False
-    check_box: check_box
-
-    Label:
-        height: 50
-        halign: 'left'
-        valign: 'center'
-        text_size: self.size
-        multiline: True
-        markup: True
-        color: utils.get_color_from_hex('#000000')
-        text: self.parent.label_text
-
-    CheckBox:
-        id: check_box
-        size_hint_x: None
-        width: 80
-        group: 'choose_url'
-        active: root.active
-        color: utils.get_color_from_hex('#000000')
-        allow_no_selection: False
-
-<SelectorCSS>
-    cols: 2
-    size_hint: 1, None
-    height: 50
-    padding: [5, 5, 5, 5]
-    text_label: ''
-    input: input
-
-    InputLabel:
-        text: root.text_label
-
-    InputString:
-        id: input
-        text: root.input_string
-
 <ScreenTemplate>
     main_screen: main_screen
     text_label: text_label
@@ -234,3 +192,42 @@
                     Rectangle:
                         pos: self.pos
                         size: self.size
+
+<ClearLabel>
+    markup: True
+    height: self.texture_size[1]
+    text_size: self.width, None
+    color: utils.get_color_from_hex('#000000')
+    canvas.before:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.texture_size
+
+<ChooseValueItem>:
+    cols: 2
+    size_hint: 1, None
+    height: 50
+    padding: [5, 5, 5, 5]
+    active: False
+    check_box: check_box
+
+    Label:
+        height: 50
+        halign: 'left'
+        valign: 'center'
+        text_size: self.size
+        multiline: True
+        markup: True
+        color: utils.get_color_from_hex('#000000')
+        text: self.parent.label_text
+
+    CheckBox:
+        id: check_box
+        size_hint_x: None
+        width: 80
+        group: 'choose_value'
+        active: root.active
+        color: utils.get_color_from_hex('#000000')
+        allow_no_selection: False

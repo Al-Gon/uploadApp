@@ -6,6 +6,28 @@ from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 import importlib.util
 import os
+import json
+
+def get_translation(text: str):
+    url = "https://translated-mymemory---translation-memory.p.rapidapi.com/api/get"
+    querystring = {"q": text, "langpair": "en|ru", "de": "a@b.c", "onlyprivate": "0", "mt": "1"}
+    headers = {
+        "X-RapidAPI-Host": "translated-mymemory---translation-memory.p.rapidapi.com",
+        "X-RapidAPI-Key": "5bf8090618msheed2f30fd311833p146a35jsn5a89ecd1d58f"
+    }
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    data = json.loads(response.text)
+    # for k, v in data.items():
+    #     print(k)
+    #     if isinstance(data[k], dict):
+    #         for k_, v_ in data[k].items():
+    #             print("data     ", k_, " ", v_)
+
+    return data['responseData']['translatedText']
+
+
+
+
 
 def import_source(module_file_path, module_name):
     module_spec = importlib.util.spec_from_file_location(

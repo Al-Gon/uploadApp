@@ -1,10 +1,11 @@
 import os
 import sys
 
-from kivy.uix.textinput import TextInput
+from kivy.uix.anchorlayout import AnchorLayout
 import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
+from handlerscroll import HandlerScroll
 from kivy.resources import resource_add_path
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -20,10 +21,11 @@ from kivy.lang import Builder
 
 Builder.load_file('base_widgets.kv')
 Builder.load_file('setting_layout.kv')
-Builder.load_file('handle_layout.kv')
 Builder.load_file('load_layout.kv')
 Builder.load_file('parser_layout.kv')
+Builder.load_file('handle_layout.kv')
 Builder.load_file('upload_layout.kv')
+
 
 class ButtonGetColors(FloatLayout):
     button_text = StringProperty('')
@@ -88,43 +90,6 @@ class ScrollLabel(ScrollView):
 class InputBlock(FloatLayout):
     input_string = StringProperty('')
 
-class ChooseUrlItem(GridLayout):
-    label_text = StringProperty('')
-    check_box = ObjectProperty()
-
-class SelectorCSS(GridLayout):
-    pass
-
-class ChooseUrl(GridLayout):
-    cols = 1
-    padding: [5, 5, 5, 5]
-    size_hint = (1, None)
-    save_button = ObjectProperty()
-    items = ListProperty([])
-    url = StringProperty('')
-    height = NumericProperty()
-
-    def set_height(self):
-        height = 0
-        for child in self.children:
-            height += child.height
-        self.height = height + 10
-
-    def on_items(self, instance, items):
-        self.clear_widgets()
-        for item in self.items:
-            new_item = ChooseUrlItem()
-            new_item.label_text = item
-            if len(self.items) == 1:
-                new_item.check_box.active = True
-                self.url = item
-            new_item.check_box.bind(active=self.choose_url)
-            self.add_widget(new_item)
-            self.set_height()
-
-    def choose_url(self, instance, is_active):
-        self.url = instance.parent.label_text
-
 class ScreenTemplate(Screen):
     pass
 
@@ -136,6 +101,11 @@ class LoadLayout(BoxLayout):
     pass
 
 class HandleLayout(BoxLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.settings_widget = NumericProperty()
+        self.handler_scroll = HandlerScroll(size_hint=(1, None))
+        self.scroll.add_widget(self.handler_scroll)
     pass
 
 class ParserLayout(BoxLayout):
@@ -153,8 +123,8 @@ class Uploader(FloatLayout):
         super(Uploader, self).__init__(**kwargs)
         layouts = [(SettingLayout(), 'Настройки'),
                    (LoadLayout(), 'Загрузка'),
-                   (HandleLayout(), 'Обработка'),
                    (ParserLayout(), 'Парсинг'),
+                   (HandleLayout(), 'Обработка'),
                    (UploadLayout(), 'Выгрузка')]
         widgets = []
         for i in range(len(layouts)):
@@ -166,11 +136,12 @@ class Uploader(FloatLayout):
 
         self.settings_widget = widgets[0]
         self.load_widget = widgets[1]
-        self.handle_widget = widgets[2]
-        self.parser_widget = widgets[3]
+        self.parser_widget = widgets[2]
+        self.handle_widget = widgets[3]
         self.upload_widget = widgets[4]
         self.store = JsonStore('settings.json')
         self.keeper = {}
+        self.handle_widget.handler_scroll.keeper = self.keeper
 
         for key, obj in self.settings_widget.ids.items():
             if key in self.store.keys():
@@ -197,9 +168,10 @@ class Uploader(FloatLayout):
         self.settings_widget.checkbox_colors.text_color.bind(active=self.check_cell_colors)
         self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
 
-        if len(self.store.get('category_site_urls')['urls']):
-            urls = self.store.get('category_site_urls')['urls']
-            self.parser_widget.choose_url.items = urls
+        if sql.make_response_query(sql.check_table('update_table')):
+            columns_names = sql.get_table_columns('update_table')
+            self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
+            self.handle_widget.handler_scroll.items = columns_names
 
         if len(self.store.get('columns')['names']):
             self.keeper['columns'] = self.store.get('columns')['names']
@@ -351,7 +323,7 @@ class Uploader(FloatLayout):
             self.load_widget.console.message = self.settings_report(missing)
         else:
             if text == 'Шаг 1':
-                self.keeper['columns'] = sql.get_table_columns()
+                self.keeper['columns'] = sql.get_table_columns('catalog')
                 self.load_widget.console.message = 'В таблице определены следующие поля:\n'
                 self.load_widget.console.message += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.keeper['columns'][1:])])
                 self.load_widget.input.text = f'Введите номера выбранных полей таблицы через запятую.' \
@@ -422,95 +394,47 @@ class Uploader(FloatLayout):
                     self.console.message = f'Нет наименований колонок таблицы для выгрузки.' \
                                         f'\nВыполните шаги с 1 по 3.'
 
-    def handle_press_step(self, text: str):
-        missing = self.check_settings(['save_dir_path', 'file_name', 'images_path'])
-        if missing:
-            self.handle_widget.console.message = self.settings_report(missing)
-        else:
-            if text == 'Шаг 1':
-                file_name = self.store.get('file_name')['name']
-                save_dir_path = self.store.get('save_dir_path')['path']
-                file_path = os.path.join(save_dir_path, file_name)
-                if ex.check_file_path(file_path):
-                    self.handle_widget.console.message = 'Файл найден.\n'
-                    self.handle_widget.console.message += f'Обрабатывается файл : {str(file_path)} \n'
-                    self.keeper['table'], self.keeper['title'] = ex.get_worksheet(file_path)
-                    self.handle_widget.step_button.text = 'Шаг 2'
-                else:
-                    self.handle_widget.console.message = f'Файл "{file_path}" не найден, либо имя указанно не верно.' \
-                                                      f'\nПроверьте указанный путь и измените настройки.' \
-                                                      f'\nПовторите операцию заново.'
-            if text == 'Шаг 2':
-                self.keeper['m_table'], m_row = ex.get_table(self.keeper['table'], 2, 10)
-                self.handle_widget.console.message += f'Основная таблица содержит {len(self.keeper["m_table"])} строк.\n'
-                self.keeper['update_table'], _ = ex.get_table(self.keeper['table'], m_row, 10)
-                self.handle_widget.step_button.text = 'Шаг 3'
+    def handle_press_step(self, text):
+        if text == 'Шаг 1':
+            column_name = self.handle_widget.handler_scroll.value
+            if column_name:
+                self.keeper['temporary_column_name'] = column_name
+                self.handle_widget.handler_scroll.items = [column_name]
+                self.handle_widget.message = f'Выбрана колонка "{column_name}".\n' \
+                                             f'Нажмите кнопку "Шаг 2" чтобы получить значения.'
+                self.handle_widget.step_button.text = 'Шаг 2'
 
-            if text == 'Шаг 3':
-                if not self.check_settings(['cell_color']):
-                    color = self.store.get('cell_color')['value']
-                    c_type = self.store.get('cell_color')['type']
-                    self.handle_widget.console.message += f'Выбран цвет [b][color=#{color}]{color}[/color][/b] '
-                    if c_type == 'text':
-                        self.handle_widget.console.message += f'текста выделенных ячеек'
-                    if c_type == 'fill':
-                        self.handle_widget.console.message += f'заливки выделенных ячеек'
-                    self.handle_widget.console.message += f' для формирования файла удаления. \n'
-                    self.handle_widget.step_button.text = 'Шаг 4'
-                else:
-                    self.handle_widget.console.message += f'Перейдите на вкладку настройки и выберете параметры \n' \
-                                                          f'выделенных ячеек для формирования файла удаления. \n'
+        if text == 'Шаг 2':
+            self.handle_widget.handler_scroll.items = []
+            column_name = self.keeper['temporary_column_name']
+            columns_values = sql.get_data_from_table('update_table', [column_name])
+            self.handle_widget.message = f'В колонке {column_name} содержится {len(columns_values)} значений.\n' \
+                                         f'После редактирования ячейки сохраните её значения.\n' \
+                                         f'Для сохранения колонки в таблицу нажмите кнопку "Шаг 3"'
+            self.keeper['temporary_column'] = []
+            for i, value in enumerate(columns_values):
+                self.keeper['temporary_column'].append([value[0], ''])
+                self.handle_widget.handler_scroll.add_edit_block(str(i), value[0])
+                # print("   ", self.handle_widget.choose_value.height)
+            self.handle_widget.step_button.text = 'Шаг 3'
 
-            if text == 'Шаг 4':
-                self.handle_widget.console.message += f'Таблица для обновления содержит {len(self.keeper["update_table"])} строк.\n'
-                if not self.keeper['update_table']:
-                    self.handle_widget.console.message += f'Файл для обновления создан не будет.\n'
-                    del self.keeper['update_table']
-                else:
-                    start_id = max(self.keeper['m_table'], key=lambda x: x[0].value)[0].value
-                    self.keeper['update_table'] = ex.set_value(self.keeper['update_table'], 0, start_id, True)
-                    self.keeper['update_table'] = ex.set_value(self.keeper['update_table'], 9, '#новые поступления#', False)
-
-                color = self.store.get('cell_color')['value']
-                c_type = self.store.get('cell_color')['type']
-                del_table, table_norm, table_err = ex.separate_table(self.keeper['m_table'], color, c_type)
-                self.handle_widget.console.message += f'Таблица для удаления содержит {len(del_table)} строк.\n'
-                if not del_table:
-                    self.handle_widget.console.message += f'Файл для удаления создан не будет.\n'
-                else:
-                    self.keeper['del_table'] = del_table
-
-                self.handle_widget.step_button.text = 'Шаг 5'
-
-            if text == 'Шаг 5':
-                if 'update_table' in self.keeper.keys():
-                    images_path = self.store.get('images_path')['path']
-                    self.handle_widget.console.message += f'Выбран путь к папке с фотографиями: {images_path} \n'
-                    response, flag = ex.check_images(images_path, self.keeper['update_table'])
-                    self.handle_widget.console.message += response
-                    if not flag:
-                        self.handle_widget.step_button.text = 'Шаг 5'
-                else:
-                    self.handle_widget.console.message += f'Проверка фотографий не произведена из-за отсутствия \
-                                                        файла обновления.\n'
-                self.handle_widget.step_button.text = 'Шаг 6'
-
-            if text == 'Шаг 6':
-                folder_path = self.store.get('save_dir_path')['path']
-                update_file_name = self.store.get('update_file_name')['name']
-                del_file_name = self.store.get('del_file_name')['name']
-                if 'update_table' in self.keeper.keys():
-                    response = ex.get_file_from_table(folder_path, update_file_name, self.keeper['update_table'], self.keeper['title'])
-                    self.handle_widget.console.message += response
-                else:
-                    self.handle_widget.console.message += f'Файл обновления не создан.\n'
-                if 'del_table' in self.keeper.keys():
-                    response = ex.get_file_from_table(folder_path, del_file_name, self.keeper['del_table'], self.keeper['title'])
-                    self.handle_widget.console.message += response
-                else:
-                    self.handle_widget.console.message += f'Файл для удаления не создан.\n'
-                self.handle_widget.console.message += f'Обработка файла успешно завершена.'
+        if text == 'Шаг 3':
+            column_name = self.keeper['temporary_column_name']
+            column = self.keeper['temporary_column']
+            for value in column:
+                if not value[1]:
+                    value[1] = value[0]
+            _, values = zip(*column)
+            msg = sql.update_column_values('update_table', column_name, list(values))
+            if not msg:
+                self.handle_widget.handler_scroll.remove_edit_blocks()
+                columns_names = sql.get_table_columns('update_table')
+                self.handle_widget.message = 'Данные сохранены.\n' \
+                                             'Выберите колонку для редактирования и нажмите "Получить значения".'
+                self.handle_widget.handler_scroll.items = columns_names
                 self.handle_widget.step_button.text = 'Шаг 1'
+            else:
+                print(msg)
 
     def parser_press_step(self, text: str):
         missing = self.check_settings(['save_dir_path',

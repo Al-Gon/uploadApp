@@ -6,9 +6,8 @@
     pos_hint: {'x':.025, 'y':.025}
     step_button: step_button
     console: console
-    choose_url: choose_url
     input_field: input_field
-    grid: grid
+
 
     canvas:
         Color:
@@ -22,23 +21,6 @@
         anchor_x: 'center'
         anchor_y: 'center'
         size_hint: 1, .2
-
-        ScrollView:
-            scroll_type: ['bars', 'content']
-            size_hint: .96, .9
-            bar_width: 10
-            bar_color: utils.get_color_from_hex('#ffffff')
-            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
-
-            GridLayout:
-                id: grid
-                cols: 1
-                size_hint: 1, None
-                height: root.grid_height
-                padding: 10, 10
-
-                ChooseUrl:
-                    id: choose_url
 
     AnchorLayout:
         anchor_x: 'center'

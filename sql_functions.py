@@ -77,10 +77,13 @@ def get_data_from_table(table_name: str, columns: list):
     """
     Returns list of data from table.
     :param table_name:
-    :param columns: list of tuples (column name, representation)
+    :param columns: list of columns names or list of tuples (column name, representation)
     :return: list
     """
-    part = ', '.join(f'{elem[0]} AS {elem[1]}' for elem in columns)
+    if isinstance(columns[0], tuple):
+        part = ', '.join(f'{elem[0]} AS {elem[1]}' for elem in columns)
+    if isinstance(columns[0], str):
+        part = ', '.join(columns)
     print(f"""SELECT {part} FROM {table_name}""")
     data = make_response_query(f"""SELECT {part} FROM {table_name}""")
     return data
@@ -109,7 +112,17 @@ def deleted_data_query(tables: list) -> str:
     query = f"""SELECT {field} FROM ({tables[0]}) WHERE {field} NOT IN ({part_1})"""
     return query
 
-def get_table_columns():
-    query = """PRAGMA table_info(Catalog)"""
+def update_column_values(table_name: str, column_name: str, values: list):
+    queries = []
+    for i, value in enumerate(values):
+        query = f"""UPDATE {table_name} SET {column_name}='{value}' WHERE id='{str(i)}'"""
+        print(query)
+        queries.append(query)
+    msg = make_query(queries)
+    return msg
+
+def get_table_columns(table_name: str):
+    """Returns names of tables columns"""
+    query = f"""PRAGMA table_info({table_name})"""
     data = make_response_query(query)
     return list(map(lambda x: x[1], data))

@@ -2,10 +2,12 @@
 
 <HandleLayout>
     orientation: 'vertical'
-    step_button: step_button
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
-    console: console
+    message: 'Консоль'
+    scroll: scroll
+    #choose_value: choose_value
+    step_button: step_button
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
@@ -14,22 +16,47 @@
             size: self.size
 
     AnchorLayout:
-        size_hint: 1, .8
         anchor_x: 'center'
         anchor_y: 'center'
+        size_hint: 1, .1
 
-        ItemLabel:
-            id: console
+        Label:
             size_hint: .94, .94
-            message: 'Консоль'
+            halign: 'left'
+            valign: 'bottom'
+            padding: 20, 5
+            text_size: self.size
+            text: root.message
+            color: utils.get_color_from_hex('#000000')
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .6
+
+        ScrollView:
+            id: scroll
+            scroll_type: ['bars', 'content']
+            do_scroll_x: False
+            do_scroll_y: True
+            size_hint: .94, 1
+            bar_width: 10
+            bar_color: utils.get_color_from_hex('#ffffff')
+            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
+
+
 
     AnchorLayout:
         size_hint: 1, .2
         anchor_x: 'center'
         anchor_y: 'center'
 
-        Button:
-            size_hint: .6, .5
-            id: step_button
-            text: 'Шаг 1'
-            on_release: app.root.handle_press_step(self.text)
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .3, .5
+
+            Button:
+                id: step_button
+                size_hint: .3, 1
+                text: 'Шаг 1'
+                on_release: app.root.handle_press_step(self.text)
