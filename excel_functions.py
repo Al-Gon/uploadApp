@@ -98,15 +98,20 @@ def separate_table(table: list, color: str, c_type: str):
             table_error.append(row)
     return table_color, table_normal, table_error
 
+
 def get_table(w_sheet, min_row: int, max_col: int):
+
     main_table = []
     max_row = 0
     for i, row in enumerate(w_sheet.iter_rows(min_row=min_row, max_col=max_col)):
         new_row = []
         for cell in row:
-            new_row.append(cell)
+            if cell.value is not None:
+                new_row.append(cell.value)
+            else:
+                new_row.append('')
         max_row = i + min_row + 1
-        if [el.value for el in new_row] == [None] * len(new_row):
+        if new_row == [''] * len(new_row):
             break
         main_table.append(new_row)
 

@@ -55,14 +55,15 @@ def get_item_content(driver, item_url: str):
     prod_name = prod_block.find_element(By.CSS_SELECTOR, 'div.product-info .product__name')
     prod_info = prod_block.find_elements(By.CSS_SELECTOR, 'div.product-info .product-info__text *')
     article = prod_code.text
-    pagetitle = prod_name.text
+    pagetitle = prod_name.text.replace("'", '`')
     brand, dimensions, introtext = '', '', ''
-    text_info = [el.text for el in prod_info if el in ['p', 'li'] and el.text]
+    text_info = [el.text for el in prod_info if el.tag_name in ['p', 'li'] and el.text]
     for el in text_info:
-        if el.count('Manufacturer:'):
-            brand = el.rsplit('Manufacturer:', 1).strip()
-        elif el.count('Floor Space:'):
-            dimensions = el.rsplit('Floor Space:', 1).strip()
+        if el.count('Floor Space:'):
+            brand, dimensions = el.split('Floor Space:')
+            dimensions = dimensions.strip().replace("'", '`')
+            brand = brand.replace('Manufacturer:', '').strip().replace("'", '`')
         else:
-            introtext += f', {el}'            
+            introtext += f', {el}'
+    introtext = introtext.replace("'", '`')
     return [article, pagetitle, introtext, '', dimensions, article, brand, '#новые поступления#']

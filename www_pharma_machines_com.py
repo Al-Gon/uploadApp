@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 def find_element(driver, by, way: str):
     try:
@@ -37,6 +38,16 @@ def get_products(driver, category_url: str):
             code = item.text.split(' - ')[0].replace(' ', '')
             items_href.append((code, item.get_attribute('href')))
     return items_href
+    
+def get_item_images(driver, item_url: str):
+    driver.get(item_url)
+    images_container = driver.find_elements(By.CSS_SELECTOR, '#gallery__thumbnail-container li')
+    images = []
+    if images_container:
+        for item in images_container:
+            img = item.find_element(By.TAG_NAME, 'img')
+            images.append(img.get_attribute('src'))
+    return images
 
 def get_item_content(driver, item_url: str):
     driver.get(item_url)
@@ -52,23 +63,14 @@ def get_item_content(driver, item_url: str):
         table_[td_1.text] = td_2.text
 
     article = table_['Stock Number'].replace(' ', '')
-    pagetitle = header.text.replace(table_['Stock Number'] + ' - ', '')
+    pagetitle = header.text.replace(table_['Stock Number'] + ' - ', '').replace("'", '`')
     brand, dimensions = '', ''
     if 'Manufacturer' in table_.keys():
-        brand = table_['Manufacturer']
+        brand = table_['Manufacturer'].replace("'", '`')
     if 'Floor space' in table_.keys():
-        dimensions = table_['Floor space']
+        dimensions = table_['Floor space'].replace("'", '`')
     excepted_keys = ['Manufacturer', 'Condition', 'Stock Number', 'Floor space']
     introtext += ', '.join([f'{k}: {v}' for k, v in table_.items() if k not in excepted_keys])
+    introtext = introtext.replace("'", '`')
 
     return [article, pagetitle, introtext, '', dimensions, article, brand, '#новые поступления#']
-    
-def get_item_images(driver, item_url: str):
-    driver.get(item_url)
-    images_container = driver.find_elements(By.CSS_SELECTOR, '#gallery__thumbnail-container li')
-    images = []
-    if images_container:
-        for item in images_container:
-            img = item.find_element(By.TAG_NAME, 'img')
-            images.append(img.get_attribute('src'))
-    return images    

@@ -57,7 +57,7 @@ class HandlerScroll(GridLayout):
         height = 0
         for child in self.children:
             height += child.height
-            print(child, ' ', child.height)
+            # print(child, ' ', child.height)
         self.height = height + 10
 
     def on_items(self, instance, items):
@@ -91,7 +91,6 @@ class HandlerScroll(GridLayout):
         text = self.edit_blocks[instance.data[0]].input_field.text
         if text:
             self.keeper['temporary_column'][instance.data[0]][1] = text
-        print(self.keeper['temporary_column'])
 
     def add_edit_block(self, number: str, value: str):
         edit_block = EditBlock()

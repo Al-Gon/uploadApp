@@ -5,7 +5,7 @@ def create_table(table_name: str, columns_: list) -> str:
     """
     Returns a string of query
     :param table_name: str
-    :param columns_: list of tuples: field name, representation
+    :param columns_: list of tuples: field name, type of data
     """
     columns = ', '.join([f'{col[0]} {col[1]}'for col in columns_])
     query = f"""CREATE TABLE IF NOT EXISTS {table_name}({columns})"""
@@ -24,7 +24,6 @@ def delete_data_from_table(table_name: str, del_data: list) -> list:
         for data in del_data:
             f"""DELETE FROM {table_name} WHERE {del_data[0]}='{del_data[1]}'"""
         return queries
-
 
 def check_table(table_name: str) -> str:
     return f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"""
@@ -80,10 +79,11 @@ def get_data_from_table(table_name: str, columns: list):
     :param columns: list of columns names or list of tuples (column name, representation)
     :return: list
     """
-    if isinstance(columns[0], tuple):
-        part = ', '.join(f'{elem[0]} AS {elem[1]}' for elem in columns)
+    part = ''
     if isinstance(columns[0], str):
         part = ', '.join(columns)
+    else:
+        part = ', '.join(f'{elem[0]} AS {elem[1]}' for elem in columns)
     print(f"""SELECT {part} FROM {table_name}""")
     data = make_response_query(f"""SELECT {part} FROM {table_name}""")
     return data
