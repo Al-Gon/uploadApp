@@ -396,7 +396,6 @@ class Uploader(FloatLayout):
                     if not msg:
                         query, data = sql.get_insert_query(new_table_name, columns_names, data)
                         msg = sql.make_many_query(query, data)
-
                     if not msg:
                         msg = ex.get_file_from_table(save_dir_path, file_name, data, columns_names)
                     if not msg:

@@ -1,5 +1,4 @@
 import sqlite3
-import excel_functions as ex
 
 def create_table(table_name: str, columns_: list) -> str:
     """

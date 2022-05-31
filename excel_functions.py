@@ -3,7 +3,6 @@ import datetime
 import os
 import re
 import json
-import parser_functions as pr
 
 def check_file_path(file_path: str):
     try:
