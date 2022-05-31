@@ -22,7 +22,7 @@ def delete_data_from_table(table_name: str, del_data: list) -> list:
     else:
         queries = []
         for data in del_data:
-            f"""DELETE FROM {table_name} WHERE {del_data[0]}='{del_data[1]}'"""
+            f"""DELETE FROM {table_name} WHERE {data[0]}='{data[1]}'"""
         return queries
 
 def check_table(table_name: str) -> str:
@@ -42,7 +42,23 @@ def make_response_query(query: str):
             conn.commit()
     return response
 
+def make_many_query(querystring: str, params: list):
+    """Executes a query throw executemany
+    :param"""
+    db_file = 'site.db'
+    error_msg = []
+    with sqlite3.connect(db_file, timeout=2) as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.executemany(querystring, params)
+        except sqlite3.DatabaseError as err:
+            error_msg.append(f'Error: {err}')
+        else:
+            conn.commit()
+    return error_msg
+
 def make_query(queries: list):
+    """OLD"""
     db_file = 'site.db'
     error_msg = []
     with sqlite3.connect(db_file, timeout=5) as conn:
@@ -56,21 +72,18 @@ def make_query(queries: list):
                 conn.commit()
     return error_msg
 
-def get_insert_queries(table_name: str, data: list, columns_names: list) -> list:
+def get_insert_query(table_name: str, columns_names: list, data: list) -> tuple:
     """
-    Creates a list of insert queries
+    Creates query string for insert query
     :param table_name: str
-    :param data: list of raws
     :param columns_names: list
-    :return: list
+    :param data: list of tuples, each of them must be the same length as list of columns names.
+    :return: tuple
     """
-    queries = []
-    for raw in data:
-        part_1 = ", ".join(columns_names)
-        part_2 = "', '".join([str(el) for el in raw])
-        queries.append(f"""INSERT INTO {table_name}({part_1}) VALUES ('{part_2}')""")
-
-    return queries
+    part_1 = ", ".join(columns_names)
+    part_2 = ", ".join(['?'] * len(columns_names))
+    query = f"""INSERT INTO {table_name}({part_1}) VALUES ({part_2})"""
+    return query, data
 
 def get_data_from_table(table_name: str, columns: list):
     """

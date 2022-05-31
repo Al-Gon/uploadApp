@@ -385,16 +385,23 @@ class Uploader(FloatLayout):
                     table_name = 'Catalog'
                     data = sql.get_data_from_table(table_name, self.keeper['columns'])
                     new_table_name = 'new_catalog'
+                    msg = ''
                     _, columns_names = zip(*self.keeper['columns'])
                     columns = zip(columns_names, ['text'] * len(columns_names))
-                    msg = sql.make_query([sql.create_table(new_table_name, list(columns))])
+                    if sql.make_response_query(sql.check_table(new_table_name)):
+                        query = sql.delete_data_from_table(new_table_name, [])
+                        msg = sql.make_query(query)
+                    else:
+                        msg = sql.make_query([sql.create_table(new_table_name, list(columns))])
                     if not msg:
-                        queries = sql.get_insert_queries(new_table_name, data, columns_names)
-                        msg = sql.make_query(queries)
+                        query, data = sql.get_insert_query(new_table_name, columns_names, data)
+                        msg = sql.make_many_query(query, data)
+
                     if not msg:
                         msg = ex.get_file_from_table(save_dir_path, file_name, data, columns_names)
                     if not msg:
                         msg = f'Файл {file_name} сохранен в папке {save_dir_path}.'
+                    msg = self.output_msg(msg)
                     self.load_widget.console.message += f'\n{msg}'
                 else:
                     self.console.message = f'Нет наименований колонок таблицы для выгрузки.' \
@@ -453,7 +460,7 @@ class Uploader(FloatLayout):
 
         At each step each table is saved in file.
 
-        :param text:
+        :param text: step button name
         :return:
         """
         missing = self.check_settings(['save_dir_path',
@@ -499,7 +506,7 @@ class Uploader(FloatLayout):
                             message += f'\nДанные функции отсутствуют в модуле: {", ".join(missed_function)}'
                         else:
                             self.keeper[m_name] = module
-                            self.parser_widget.step_button.text = 'Шаг 4'
+                            self.parser_widget.step_button.text = 'Шаг 2'
                 self.parser_widget.console.message = message
 
             if text == 'Шаг 2':
@@ -547,15 +554,15 @@ class Uploader(FloatLayout):
                 if not sql.make_response_query(sql.check_table('del_table')):
                     query = sql.create_table('del_table', [('article', 'text')])
                     msg = sql.make_query([query])
-                if not msg:
+                else:
                     msg = sql.make_query(sql.delete_data_from_table('del_table', []))
                 if not msg:
                     deleted_query = sql.deleted_data_query(tables_names)
                     deleted_data = sql.make_response_query(deleted_query)
                     deleted_data = list(map(lambda x: [x[0]], deleted_data))
                     if deleted_data:
-                        queries = sql.get_insert_queries('del_table', deleted_data, ['article'])
-                        msg = sql.make_query(queries)
+                        query, deleted_data = sql.get_insert_query('del_table', ['article'], deleted_data)
+                        msg = sql.make_many_query(query, deleted_data)
                         if not msg:
                             msg = ex.get_file_from_table(save_dir_path, del_file_name, deleted_data, ['article'])
                 if not msg:
@@ -574,9 +581,10 @@ class Uploader(FloatLayout):
                     _, cols_names = zip(*self.store.get('columns')['names'])
                     columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
                     columns_ = list(zip(columns_names, ['text'] * len(columns_names)))
-                    msg = sql.make_query([sql.create_table('update_table', columns_)])
-                    if not msg:
+                    if sql.make_response_query(sql.check_table('update_table')):
                         msg = sql.make_query(sql.delete_data_from_table('update_table', []))
+                    else:
+                        msg = sql.make_query([sql.create_table('update_table', columns_)])
                     update_table = []
                     if not msg:
                         update_dict = {pr.get_site_name(url): [] for url in urls}
@@ -598,7 +606,8 @@ class Uploader(FloatLayout):
                                         update_table.append(item_row)
                                     i += 1
                         driver.close()
-                    msg = sql.make_query(sql.get_insert_queries('update_table', update_table, columns_names))
+                    query, data = sql.get_insert_query('update_table', columns_names, update_table)
+                    msg = sql.make_many_query(query, data)
                     if not msg:
                         msg = ex.get_file_from_table(save_dir_path, update_file_name, update_table, columns_names)
                     if not msg:
@@ -623,15 +632,15 @@ class Uploader(FloatLayout):
                 self.upload_widget.console.message = f'Нет данных для загрузки.\n' \
                                                      f'Перейдите к операции "Обработка"'
             else:
-                # print(len(data))
                 catalog_columns, _ = zip(*columns)
                 # print(sql.get_insert_queries('catalog', data, list(catalog_columns))[0])
-                msg = sql.make_query(sql.get_insert_queries('catalog', data, catalog_columns))
+                query, data = sql.get_insert_query('catalog', catalog_columns, data)
+                msg = sql.make_many_query('catalog', data)
                 if not msg:
                     self.upload_widget.console.message = f'Было успешно добавленно {len(data)} записей.'
                 else:
-                    self.upload_widget.console.message = 'Произошли следующие ошибки:'
-                    self.upload_widget.console.message += '\n'.join(msg)
+                    msg = self.output_msg(msg)
+                    self.upload_widget.console.message = f'Произошли следующие ошибки:\n{msg}'
 
     def delete_step(self):
         data = []

@@ -192,6 +192,7 @@ def check_version(version: str):
     json_str = {
                 "uploader": {"version": version},
                 "save_dir_path": {"path": ""},
+                # "db_file_name": {"name": ""},
                 "file_name": {"name": ""},
                 "images_folder_name": {"name": ""},
                 "cell_color": {"type": "",
