@@ -10,19 +10,20 @@ def create_table(table_name: str, columns_: list) -> str:
     query = f"""CREATE TABLE IF NOT EXISTS {table_name}({columns})"""
     return query
 
-def delete_data_from_table(table_name: str, del_data: list) -> list:
+def get_delete_query(table_name: str, columns_names=None, data=None) -> tuple:
     """
-    Returns a list of delete queries.
-    :param table_name: string
-    :param del_data: list of tuples: field, value
+    Returns a tuple: query string and list of data rows.
+    :param table_name: str
+    :param columns_names: list
+    :param data: list of tuples, each of them must be the same length as list of columns names.
+    :return: tuple
     """
-    if not del_data:
-        return [f"""DELETE FROM {table_name}"""]
-    else:
-        queries = []
-        for data in del_data:
-            f"""DELETE FROM {table_name} WHERE {data[0]}='{data[1]}'"""
-        return queries
+    columns_names = columns_names or []
+    data = data or []
+    condition = ''
+    if columns_names and len(columns_names) == len(max(data, key=len, default=[])):
+        condition = ' WHERE ' + ' AND '.join([f'{col}=?' for col in columns_names])
+    return f"""DELETE FROM {table_name}{condition}""", data
 
 def check_table(table_name: str) -> str:
     return f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"""
@@ -56,24 +57,23 @@ def make_many_query(querystring: str, params: list):
             conn.commit()
     return error_msg
 
-def make_query(queries: list):
-    """OLD"""
+def make_query(querystring: str):
+    """Executes a query throw execute"""
     db_file = 'site.db'
     error_msg = []
-    with sqlite3.connect(db_file, timeout=5) as conn:
+    with sqlite3.connect(db_file) as conn:
         cursor = conn.cursor()
-        for query in queries:
-            try:
-                cursor.execute(query)
-            except sqlite3.DatabaseError as err:
-                error_msg.append(f'Error: {err}')
-            else:
-                conn.commit()
+        try:
+            cursor.execute(querystring)
+        except sqlite3.DatabaseError as err:
+            error_msg.append(f'Error: {err}')
+        else:
+            conn.commit()
     return error_msg
 
 def get_insert_query(table_name: str, columns_names: list, data: list) -> tuple:
     """
-    Creates query string for insert query
+    Returns a tuple: query string and list of data rows.
     :param table_name: str
     :param columns_names: list
     :param data: list of tuples, each of them must be the same length as list of columns names.
