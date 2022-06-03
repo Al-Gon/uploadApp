@@ -171,7 +171,7 @@ class Uploader(FloatLayout):
         if sql.make_response_query(sql.check_table('update_table')):
             columns_names = sql.get_table_columns('update_table')
             self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
-            self.handle_widget.handler_scroll.items = columns_names
+            self.handle_widget.handler_scroll.items = columns_names[1:]
 
         if len(self.store.get('columns')['names']):
             self.keeper['columns'] = self.store.get('columns')['names']
@@ -352,7 +352,7 @@ class Uploader(FloatLayout):
                 if len(numbers) == len(numbers_):
                     self.keeper['columns'] = [self.keeper['columns'][0]] + [self.keeper['columns'][num] for num in numbers]
                     self.load_widget.console.message = 'Определены следующие колонки:\n'
-                    self.load_widget.console.message += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.keeper['columns'])])
+                    self.load_widget.console.message += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.keeper['columns'][1:])])
                     self.load_widget.input.text = 'Введите представления имён выбранных колонок в файле через запятую.'
                     self.load_widget.step_button_1.text = 'Шаг 2'
                     self.load_widget.step_button_2.text = 'Шаг 3'
@@ -361,9 +361,9 @@ class Uploader(FloatLayout):
                     self.load_widget.input.text = 'Введите номера выбранных колонок таблицы через запятую.'
 
             elif text == 'Шаг 3':
-                names = self.load_widget.input.text.split(',')
-                if len(names) == len(self.keeper['columns']):
-                    self.keeper['columns'] = [(self.keeper['columns'][i], names[i].strip()) for i in range(len(names))]
+                names = self.load_widget.input.text.replace(' ', '').split(',')
+                if len(names) + 1 == len(self.keeper['columns']):
+                    self.keeper['columns'] = list(zip(self.keeper['columns'], ['id'] + names))
                     self.load_widget.console.message = 'Определены следующие колонки:\n'
                     m1, m2 = [max(map(len, col)) for col in zip(*self.keeper['columns'])]
                     temp = f'{{}}. {{:>{m1 + 2}}} -- {{:<{m2 + 2}}}'
@@ -387,12 +387,11 @@ class Uploader(FloatLayout):
                     new_table_name = 'new_catalog'
                     msg = ''
                     _, columns_names = zip(*self.keeper['columns'])
-                    columns = zip(columns_names, ['text'] * len(columns_names))
                     if sql.make_response_query(sql.check_table(new_table_name)):
                         query, _ = sql.get_delete_query(new_table_name)
                         msg = sql.make_query(query)
                     else:
-                        query = sql.create_table(new_table_name, list(columns))
+                        query = sql.create_table(new_table_name, columns_names)
                         msg = sql.make_query(query)
                     if not msg:
                         query, data = sql.get_insert_query(new_table_name, columns_names, data)
@@ -439,10 +438,10 @@ class Uploader(FloatLayout):
             update_file_name = self.store.get('update_file_name')['name']
             del_file_name = self.store.get('del_file_name')['name']
             images_folder_name = self.store.get('images_folder_name')['name']
-            columns = [('categories', 'text'),
-                       ('categories_alias', 'text'),
-                       ('article', 'text'),
-                       ('article_alias', 'text')]
+            columns_names= ['categories',
+                            'categories_alias',
+                            'article',
+                            'article_alias']
             if text == 'Шаг 1':
                 function_names = self.store.get('functions_names')['names']
                 message = ''
@@ -473,7 +472,7 @@ class Uploader(FloatLayout):
                 for i, m_name in enumerate(module_names):
                     table_name = f'{m_name}'
                     file_name = self.store.get('category_site_file_name')['name'].replace('{site}', m_name)
-                    query = sql.create_table(table_name, columns)
+                    query = sql.create_table(table_name, columns_names)
                     msg = sql.make_query(query)
                     if not msg:
                         query, _ = sql.get_delete_query(table_name)
@@ -487,11 +486,9 @@ class Uploader(FloatLayout):
                             rows = self.keeper[m_name].get_products(driver, href)
                             data += [start + list(row) for row in rows]
                         driver.close()
-                        columns_names, _ = zip(*columns)
-                        query, data = sql.get_insert_query(table_name, list(columns_names), data)
+                        query, data = sql.get_insert_query(table_name, columns_names, data)
                         msg = sql.make_many_query(query, data)
                     if not msg:
-                        columns_names, _ = zip(*columns)
                         columns = list(zip(columns_names, columns_names))
                         data = sql.get_data_from_table(table_name, columns)
                         msg = ex.get_file_from_table(save_dir_path, file_name, data, columns_names)
@@ -506,7 +503,7 @@ class Uploader(FloatLayout):
             if text == 'Шаг 3':
                 msg = ''
                 if not sql.make_response_query(sql.check_table('del_table')):
-                    query = sql.create_table('del_table', [('article', 'text')])
+                    query = sql.create_table('del_table', ['id', 'article'])
                     msg = sql.make_query(query)
                 else:
                     query, _ = sql.get_delete_query('del_table')
@@ -527,20 +524,19 @@ class Uploader(FloatLayout):
                     self.parser_widget.console.message = self.output_msg(msg)
 
             if text == 'Шаг 4':
-                update_query = sql.update_data_query(tables_names)
-                update_data = sql.make_response_query(update_query)
+                query = sql.update_data_query(tables_names)
+                update_data = sql.make_response_query(query)
                 if not update_data:
                     self.parser_widget.console.message = 'Нет данных для обновления.'
                 else:
                     images_dir_path = os.path.join(save_dir_path, images_folder_name)
                     _, cols_names = zip(*self.store.get('columns')['names'])
                     columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
-                    columns_ = list(zip(columns_names, ['text'] * len(columns_names)))
                     if sql.make_response_query(sql.check_table('update_table')):
                         query, _ = sql.get_delete_query('update_table')
                         msg = sql.make_query(query)
                     else:
-                        query = sql.create_table('update_table', columns_)
+                        query = sql.create_table('update_table', columns_names)
                         msg = sql.make_query(query)
                     update_table = []
                     if not msg:
@@ -548,28 +544,31 @@ class Uploader(FloatLayout):
                         for row in update_data:
                             update_dict[pr.get_site_name(row[1])].append(row)
                         driver = pr.get_driver()
-                        i = 0
+
                         if ex.del_dir_files(images_dir_path):
                             for k, v in update_dict.items():
                                 for row in v:
                                     item_url = row[3]
-                                    item_row = [str(i), row[0]]
+                                    item_row = [row[0]]
                                     item_row += self.keeper[k].get_item_content(driver, item_url)
                                     item_images = self.keeper[k].get_item_images(driver, item_url)
                                     images_paths, file_names, values, fields_names = ex.get_image_fields(row[2], item_images)
                                     pr.get_images(images_dir_path, images_paths, file_names)
                                     item_row += values
-                                    if len(columns_names) == len(item_row):
+                                    if len(columns_names) - 1 == len(item_row):
                                         update_table.append(item_row)
-                                    i += 1
+
                         driver.close()
-                    query, data = sql.get_insert_query('update_table', columns_names, update_table)
+                    query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
                     msg = sql.make_many_query(query, data)
                     if not msg:
-                        msg = ex.get_file_from_table(save_dir_path, update_file_name, update_table, columns_names)
+                        msg = ex.get_file_from_table(save_dir_path, update_file_name, update_table, columns_names[1:])
                     if not msg:
                         self.parser_widget.console.message = f'Файл {update_file_name} сохранен в папке {save_dir_path}.'
                         self.parser_widget.step_button.text = 'Шаг 1'
+                        columns_names = sql.get_table_columns('update_table')
+                        self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
+                        self.handle_widget.handler_scroll.items = columns_names[1:]
                     else:
                         self.parser_widget.console.message = self.output_msg(msg)
 
@@ -586,25 +585,24 @@ class Uploader(FloatLayout):
         if text == 'Шаг 2':
             self.handle_widget.handler_scroll.items = []
             column_name = self.keeper['temporary_column_name']
-            columns_values = sql.get_data_from_table('update_table', [column_name])
+            columns_values = sql.get_data_from_table('update_table', ['ID', column_name])
             self.handle_widget.message = f'В колонке {column_name} содержится {len(columns_values)} значений.\n' \
                                          f'После редактирования ячейки сохраните её значения.\n' \
                                          f'Для сохранения колонки в таблицу нажмите кнопку "Шаг 3"'
-            self.keeper['temporary_column'] = []
-            for i, value in enumerate(columns_values):
-                self.keeper['temporary_column'].append([value[0], ''])
-                self.handle_widget.handler_scroll.add_edit_block(str(i), value[0])
+            self.keeper['temporary_column'] = {}
+            for _id, value in columns_values:
+                self.keeper['temporary_column'][_id] = ([value, ''])
+                self.handle_widget.handler_scroll.add_edit_block(_id, value)
                 # print("   ", self.handle_widget.choose_value.height)
+
             self.handle_widget.step_button.text = 'Шаг 3'
 
         if text == 'Шаг 3':
             column_name = self.keeper['temporary_column_name']
             column = self.keeper['temporary_column']
-            for value in column:
-                if not value[1]:
-                    value[1] = value[0]
-            _, values = zip(*column)
-            msg = sql.update_column_values('update_table', column_name, list(values))
+            values = list(map(lambda item: (item[1][0] if not item[1][1] else item[1][1], item[0]), column.items()))
+            query, data = sql.get_set_values_query('update_table', column_name, values)
+            msg = sql.make_many_query(query, data)
             if not msg:
                 self.handle_widget.handler_scroll.remove_edit_blocks()
                 columns_names = sql.get_table_columns('update_table')

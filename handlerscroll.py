@@ -82,24 +82,26 @@ class HandlerScroll(GridLayout):
         return h
 
     def translate(self, instance):
+        value, index = instance.data[0], instance.data[1]
         text = ''
-        if instance.data[0]:
-            text = pr.get_translation(instance.data[0])
-        self.edit_blocks[instance.data[1]].input_field.text = text
+        if value:
+            text = pr.get_translation(value)
+        self.edit_blocks[index].input_field.text = text
 
     def save_cell_value(self, instance):
-        text = self.edit_blocks[instance.data[0]].input_field.text
+        _id, index = instance.data[0], instance.data[1]
+        text = self.edit_blocks[index].input_field.text
         if text:
-            self.keeper['temporary_column'][instance.data[0]][1] = text
+            self.keeper['temporary_column'][_id][1] = text
 
-    def add_edit_block(self, number: str, value: str):
+    def add_edit_block(self, _id: int, value: str):
         edit_block = EditBlock()
         self.edit_blocks.append(edit_block)
         self.add_widget(edit_block)
 
         label_title = ClearLabel(padding=(30, 10))
         edit_block.add_widget(label_title)
-        label_title.text = f'[size=17sp]Порядковый номер ряда [b]{number}[/b][/size]'
+        label_title.text = f'[size=17sp]Значение поля "id" ряда [b]{_id}[/b][/size]'
         ht = self.count_text_h(label_title)
 
         label_0 = ClearLabel(padding=(40, 10))
@@ -140,9 +142,9 @@ class HandlerScroll(GridLayout):
         box_layout = BoxLayout(orientation='horizontal',
                                size_hint=(.6, .6))
         button1 = TrButton(size_hint=(.5, 1), text='Перевести')
-        button1.data = [value, int(number)]
+        button1.data = [value, self.edit_blocks.index(edit_block)]
         button2 = TrButton(size_hint=(.5, 1), text='Сохранить')
-        button2.data = [int(number)]
+        button2.data = [_id, self.edit_blocks.index(edit_block)]
         box_layout.add_widget(button1)
         box_layout.add_widget(button2)
         footer.add_widget(box_layout)
