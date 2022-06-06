@@ -6,6 +6,7 @@
     pos_hint: {'x':.025, 'y':.025}
     console: console
     save_dir_path: save_dir_path
+    db_file_name: db_file_name
     file_name: file_name
     images_folder_name: images_folder_name
     update_file_name: update_file_name
@@ -50,6 +51,12 @@
                     text_label: 'Путь к папке для хранения файлов:'
                     input_string: 'Введите путь к папке для хранения файлов.'
                     button_name: 'save_dir_path_button'
+
+                InputBlock:
+                    id: db_file_name
+                    text_label: 'Имя файла базы данных:'
+                    input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.db").'
+                    button_name: 'db_file_name_button'
 
                 InputBlock:
                     id: file_name

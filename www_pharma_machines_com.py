@@ -53,9 +53,9 @@ def get_item_content(driver, item_url: str):
     driver.get(item_url)
     introtext = ''
     header = find_element(driver, By.CSS_SELECTOR, 'div.show-info__header .show-info__title')
-    divs = find_elements(driver, By.CSS_SELECTOR, 'div.show-info__section-text p')
-    if divs:
-        introtext += ', '.join([p.text for p in divs])
+    description = find_elements(driver, By.CSS_SELECTOR, 'div.show-info__description *')
+    if description:
+        introtext += ', '.join([el.text for el in description if el.text]) + ' '
     table = find_element(driver, By.CSS_SELECTOR, 'div.show-info__specifications table')
     table_ = {}
     for tr in table.find_elements(By.TAG_NAME, 'tr'):
@@ -73,4 +73,4 @@ def get_item_content(driver, item_url: str):
     introtext += ', '.join([f'{k}: {v}' for k, v in table_.items() if k not in excepted_keys])
     introtext = introtext.replace("'", '`')
 
-    return [article, pagetitle, introtext, '', dimensions, article, brand, '#новые поступления#']
+    return [article, pagetitle, introtext, article, brand, dimensions, '#новые поступления#']

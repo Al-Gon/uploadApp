@@ -28,16 +28,16 @@ def check_file_name(name: str):
     pattern = r'.*_\d{2}_\d{2}.{1}xlsx'
     return True if not name or re.findall(pattern, name) else False
 
-def make_file_name(name: str, substr: bool = False):
-    """Returns the file name with xlsx extension as a string """
+def make_file_name(name: str, extension: str, substr: bool = False):
+    """Returns the file name with specified extension as a string """
     date = f'_{datetime.datetime.now().strftime("%d_%m")}'
     site = ''
-    if name.endswith('.xlsx'):
-        name = name.strip().rsplit('.xlsx', 1)[0]
+    if name.endswith(extension):
+        name = name.strip().rsplit(extension, 1)[0]
     if substr:
         site = '_{site}'
         # url = f'_{url.lstrip("https://").split("/")[0].replace(".", "_")}'
-    return f'{name}{site}{date}.xlsx'
+    return f'{name}{site}{date}{extension}'
 
 def del_dir_files(dir_path: str) -> bool:
     """Returns True if dir is empty."""
@@ -127,21 +127,30 @@ def set_value(table: list, pos: int, val, incr: bool):
         row[pos].value = val
     return table
 
-def get_file_from_table(folder_path: str, file_name: str, table: list, top_row: list):
+def get_file_from_data(folder_path: str, file_name: str, data: list, columns_names: list):
+    """
+    Save data to the file with 'xlsx' extension.
+    :param folder_path: folder_path
+    :param file_name: file_name
+    :param data: list of lists, each of which will be a row in file
+    :param columns_names: names of columns in file.
+    :return: error_msg
+    """
     full_path = os.path.join(folder_path, file_name)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Main'
-    error_msg = []
-    for row in [top_row] + table:
-        if isinstance(row[0], str) or isinstance(row[0], int):
-            ws.append(row)
-        else:
-            ws.append(row)
-    try:
-        wb.save(full_path)
-    except PermissionError:
-        error_msg = f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
+    error_msg = ''
+    if len(columns_names) != len(max(data, key=len, default=[])):
+        error_msg = f'Количество имён колонок не соответствует количеству столбцов данных.\n'
+    else:
+        for row in [columns_names] + data:
+            if isinstance(row[0], str) or isinstance(row[0], int):
+                ws.append(row)
+        try:
+            wb.save(full_path)
+        except PermissionError:
+            error_msg = f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
     return error_msg
 
 def check_images(path: str, table: list):
@@ -191,7 +200,7 @@ def check_version(version: str):
     json_str = {
                 "uploader": {"version": version},
                 "save_dir_path": {"path": ""},
-                # "db_file_name": {"name": ""},
+                "db_file_name": {"name": ""},
                 "file_name": {"name": ""},
                 "images_folder_name": {"name": ""},
                 "cell_color": {"type": "",
