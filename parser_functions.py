@@ -1,12 +1,15 @@
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException, NoSuchAttributeException
+from selenium.common.exceptions import NoSuchElementException
 import requests
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 import importlib.util
 import os
 import json
+
+class Driver(webdriver.Chrome):
+    cookie = False
+    pass
 
 def get_translation(text: str):
     url = "https://translated-mymemory---translation-memory.p.rapidapi.com/api/get"
@@ -38,9 +41,10 @@ def missed_function(module, function_names: list) -> list:
 def check_url(url: str):
     try:
         response = requests.get(url)
-        return response.ok
     except(requests.RequestException, ValueError):
         return False
+    else:
+        return response.ok
 
 def get_images(folder_path: str, images_paths: list, file_names: list):
     ua = UserAgent()
@@ -64,7 +68,7 @@ def get_driver():
     ua = UserAgent()
     user_agent = ua.random
     options.add_argument(f'user-agent={user_agent}')
-    driver = webdriver.Chrome(chrome_options=options)
+    driver = Driver(chrome_options=options)
     return driver
 
 def find_element(driver, by, way: str):

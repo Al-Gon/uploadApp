@@ -76,6 +76,30 @@ def make_query(db_folder_path: str, db_file: str, querystring: str):
             con.close()
     return error_msg
 
+def make_query_script(db_folder_path: str, db_file: str, querystring: str):
+    """
+    Executes a query script throw executescript
+    :param: db_folder_path
+    :param: db_file
+    :param: querystring
+    """
+    db_path = os.path.join(db_folder_path, db_file)
+    con = None
+    error_msg = ''
+    try:
+        con = sqlite3.connect(db_path)
+        cursor = con.cursor()
+        cursor.executescript(querystring)
+        con.commit()
+    except sqlite3.DatabaseError as err:
+        if con:
+            con.rollback()
+        error_msg = f'Error: {err}'
+    finally:
+        if con:
+            con.close()
+    return error_msg
+
 def create_table(table_name: str, columns_names: list) -> str:
     """
     Returns a string of query
@@ -97,10 +121,13 @@ def get_delete_query(table_name: str, columns_names=None, data=None) -> tuple:
     """
     columns_names = columns_names or []
     data = data or []
-    condition = ''
+    query = f"""DELETE FROM {table_name}"""
     if columns_names and len(columns_names) == len(max(data, key=len, default=[])):
         condition = ' WHERE ' + ' AND '.join([f'{col}=?' for col in columns_names])
-    return f"""DELETE FROM {table_name}{condition}""", data
+        query += condition
+    else:
+        query += f""";\nUPDATE SQLITE_SEQUENCE SET seq=0 WHERE name = '{table_name}';"""
+    return query, data
 
 def check_table(table_name: str) -> str:
     return f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"""

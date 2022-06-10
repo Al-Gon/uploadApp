@@ -1,7 +1,6 @@
 import os
 import sys
 
-from kivy.uix.anchorlayout import AnchorLayout
 import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
@@ -409,7 +408,7 @@ class Uploader(FloatLayout):
                     _, columns_names = zip(*self.keeper['columns'])
                     if sql.make_response_query(save_dir_path, db_file_name, sql.check_table(new_table_name)):
                         query, _ = sql.get_delete_query(new_table_name)
-                        msg = sql.make_query(save_dir_path, db_file_name, query)
+                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
                     else:
                         query = sql.create_table(new_table_name, columns_names)
                         msg = sql.make_query(save_dir_path, db_file_name, query)
@@ -495,12 +494,14 @@ class Uploader(FloatLayout):
                     msg = sql.make_query(save_dir_path, db_file_name, query)
                     if not msg:
                         query, _ = sql.get_delete_query(table_name)
-                        msg = sql.make_query(save_dir_path, db_file_name, query)
+                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
                     if not msg:
                         driver = pr.get_driver()
                         categories = self.keeper[m_name].get_categories(driver, urls[i])
                         data = []
                         for name, href in categories:
+                            if not driver.cookie:
+                                self.keeper[m_name].accept_cookie(driver, href)
                             start = [name, href]
                             rows = self.keeper[m_name].get_products(driver, href)
                             data += [start + list(row) for row in rows]
@@ -527,7 +528,7 @@ class Uploader(FloatLayout):
                     msg = sql.make_query(save_dir_path, db_file_name, query)
                 else:
                     query, _ = sql.get_delete_query('del_table')
-                    msg = sql.make_query(save_dir_path, db_file_name, query)
+                    msg = sql.make_query_script(save_dir_path, db_file_name, query)
                 if not msg:
                     deleted_query = sql.deleted_data_query(tables_names)
                     deleted_data = sql.make_response_query(save_dir_path, db_file_name, deleted_query)
@@ -554,7 +555,7 @@ class Uploader(FloatLayout):
                     columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
                     if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
                         query, _ = sql.get_delete_query('update_table')
-                        msg = sql.make_query(save_dir_path, db_file_name, query)
+                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
                     else:
                         query = sql.create_table('update_table', columns_names)
                         msg = sql.make_query(save_dir_path, db_file_name, query)
@@ -563,13 +564,15 @@ class Uploader(FloatLayout):
                         update_dict = {pr.get_site_name(url): [] for url in urls}
                         for row in update_data:
                             update_dict[pr.get_site_name(row[1])].append(row)
-                        driver = pr.get_driver()
 
                         if ex.del_dir_files(images_dir_path):
                             for k, v in update_dict.items():
+                                driver = pr.get_driver()
                                 for row in v:
                                     item_url = row[3]
                                     item_row = [row[0]]
+                                    if not driver.cookie:
+                                        self.keeper[k].accept_cookie(driver, item_url)
                                     item_row += self.keeper[k].get_item_content(driver, item_url)
                                     item_images = self.keeper[k].get_item_images(driver, item_url)
                                     images_paths, file_names, values, fields_names = ex.get_image_fields(row[2], item_images)
@@ -577,8 +580,7 @@ class Uploader(FloatLayout):
                                     item_row += values
                                     if len(columns_names) - 1 == len(item_row):
                                         update_table.append(item_row)
-
-                        driver.close()
+                                driver.close()
                     query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
                     msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
                     if not msg:

@@ -145,7 +145,7 @@ def get_file_from_data(folder_path: str, file_name: str, data: list, columns_nam
         error_msg = f'Количество имён колонок не соответствует количеству столбцов данных.\n'
     else:
         for row in [columns_names] + data:
-            if isinstance(row[0], str) or isinstance(row[0], int):
+            if isinstance(row[0], (str, int)):
                 ws.append(row)
         try:
             wb.save(full_path)

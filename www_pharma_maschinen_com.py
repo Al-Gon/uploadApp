@@ -1,5 +1,18 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+def accept_cookie(driver, url):
+    driver.get(url)
+    try:
+        btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.cc_banner-wrapper a.cc_btn')))
+        btn.click()
+    except TimeoutException:
+        pass
+    finally:
+        driver.cookie = True
 
 def get_categories(driver, site: str):
     driver.get(site)
@@ -57,13 +70,14 @@ def get_item_content(driver, item_url: str):
     article = prod_code.text
     pagetitle = prod_name.text.replace("'", '`')
     brand, dimensions, introtext = '', '', ''
-    text_info = [el.text for el in prod_info if el.tag_name in ['p', 'li'] and el.text]
+    text_info = [el.text for el in prod_info if el.tag_name in ['p', 'li', 'div'] and el.text.strip()]
     for el in text_info:
         if el.count('Floor Space:'):
             brand, dimensions = el.split('Floor Space:')
             dimensions = dimensions.strip().replace("'", '`')
             brand = brand.replace('Manufacturer:', '').strip().replace("'", '`')
         else:
-            introtext += f', {el}'
-    introtext = introtext.replace("'", '`')
-    return [article, pagetitle, introtext, '', dimensions, article, brand, '#новые поступления#']
+            introtext += f'{el} '
+    introtext = introtext.strip().replace("'", '`')
+
+    return [article, pagetitle, introtext, article, brand, dimensions, '#новые поступления#']
