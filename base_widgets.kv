@@ -72,82 +72,43 @@
         text: root.button_text
         on_release: app.root.handle_path(self.name)
 
-<CheckBoxColors>
-    cols: 4
-    padding: [5, 5, 5, 5]
+<ChooseColorBlock>
+    cols: 1
     size_hint: 1, None
-    height: 50
-    color: utils.get_color_from_hex('#000000')
-    text_color: text_color
-    fill_color: fill_color
+    text_label: ''
+    button_name: ''
+    button_text: 'Выбрать/Сохранить'
+    #choose_color: 'CCFFCC'
 
-    Label:
-        text: 'Цвет заливки ячеек'
-        color: root.color
+    FloatLayout:
+        padding: [5, 5, 5, 5]
+        size_hint: 1, None
 
-    CheckBox:
-        id: fill_color
-        name: 'fill_color'
-        group: 'checkbox_colors'
-        active: False
-        color: root.color
-        allow_no_selection: False
+        InputLabel:
+            text: root.text_label
 
-    Label:
-        text: 'Цвет шрифта ячеек'
-        color: root.color
+        BoxLayout:
+            orientation: 'horizontal'
+            pos_hint: {'x':.32, 'y':.5}
+            size_hint: .7, .4
+            Label:
+                size_hint: .3, 1
+                canvas.before:
+                    Color:
+                        rgba: utils.get_color_from_hex(root.choose_color)
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
 
-    CheckBox:
-        id: text_color
-        name: 'text_color'
-        group: 'checkbox_colors'
-        active: False
-        color: root.color
-        allow_no_selection: False
+            Label:
+                size_hint: .5, 1
+                text: root.choose_color
+                color: utils.get_color_from_hex('000000')
 
-<ButtonGetColors>
-    padding: [5, 5, 5, 5]
-    size_hint: 1, None
-    height: 50
-    button_text: ''
-    Button:
-        pos_hint: {'x':.58, 'y':.1}
-        size_hint: .4, .75
-        text: root.button_text
-        on_release: app.root.get_cell_colors(self.text)
-
-<ButtonSaveColor>
-    padding: [5, 5, 5, 5]
-    size_hint: 1, None
-    height: 50
-    Button:
-        pos_hint: {'x':.58, 'y':.1}
-        size_hint: .4, .75
-        text: 'Сохранить'
-        on_release: app.root.save_cell_color()
-
-<ChooseColorItem>:
-    cols: 2
-    size_hint: 1, None
-    height: 50
-    padding: [5, 5, 5, 5]
-    active: False
-    check_box: check_box
-
-    Label:
-        height: 50
-        canvas.before:
-            Color:
-                rgba: utils.get_color_from_hex(self.parent.label_color)
-            Rectangle:
-                pos: self.pos
-                size: self.size
-    CheckBox:
-        id: check_box
-        group: 'choose_color'
-        active: root.active
-        color: utils.get_color_from_hex('#000000')
-        allow_no_selection: False
+        CheckSaveButton:
+            name: root.button_name
+            text: root.button_text
+            on_release: app.root.get_color(self.name)
 
 <ScreenTemplate>
     main_screen: main_screen

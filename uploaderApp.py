@@ -5,6 +5,7 @@ import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
 from handlerscroll import HandlerScroll
+from colorspanel import ColorsPanel
 from kivy.resources import resource_add_path
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.floatlayout import FloatLayout
@@ -33,53 +34,6 @@ class ButtonGetColors(FloatLayout):
 class ButtonSaveColor(FloatLayout):
     pass
 
-class ChooseColorItem(GridLayout):
-    label_color = StringProperty('')
-    check_box = ObjectProperty()
-
-class ChooseColor(GridLayout):
-    cols = 1
-    padding: [5, 5, 5, 5]
-    size_hint = (1, None)
-    save_button = ObjectProperty()
-    items = ListProperty([])
-    color = StringProperty('')
-    height = NumericProperty()
-
-    def set_height(self):
-        height = 0
-        for child in self.children:
-            height += child.height
-        self.height = height + 10
-
-    def on_items(self, instance, items):
-        self.clear_widgets()
-        for item in self.items:
-            new_item = ChooseColorItem()
-            new_item.label_color = item
-            if len(self.items) == 1:
-                new_item.check_box.active = True
-                self.color = item
-            new_item.check_box.bind(active=self.choose_color)
-            self.add_widget(new_item)
-            self.set_height()
-
-    def choose_color(self, instance, is_active):
-        self.color = instance.parent.label_color
-
-    def add_button(self):
-        self.save_button = ButtonSaveColor()
-        self.add_widget(self.save_button)
-        self.set_height()
-
-    def remove_button(self):
-        self.remove_widget(self.save_button)
-        self.set_height()
-
-class CheckBoxColors(GridLayout):
-    text_color = ObjectProperty()
-    fill_color = ObjectProperty()
-
 class ItemLabel(Label):
     message = StringProperty('')
 
@@ -88,6 +42,23 @@ class ScrollLabel(ScrollView):
 
 class InputBlock(FloatLayout):
     input_string = StringProperty('')
+
+class ChooseColorBlock(GridLayout):
+    choose_color = StringProperty('')
+    panels = ListProperty([])
+    panel = None
+
+    def on_panels(self, instance, panels):
+        if panels:
+            instance.add_widget(self.panels[0])
+            instance.panel = self.panels[0]
+        else:
+            instance.remove_widget(self.panel)
+            self.panel = None
+        height = 0
+        for child in self.children:
+            height += child.height
+        self.height = height + 10
 
 class ScreenTemplate(Screen):
     pass
@@ -147,24 +118,13 @@ class Uploader(FloatLayout):
                 value = self.store.get(key)[key.rsplit('_', 1)[-1]]
                 if value:
                     if isinstance(value, str):
-                        obj.input.text = value
+                        if hasattr(obj, 'input'):
+                            obj.input.text = value
+                        elif hasattr(obj, 'choose_color'):
+                            obj.choose_color = value
                     if isinstance(value, list):
                         obj.input.text = ', '.join(value)
 
-        if len(self.store.get('cell_color')['type']):
-            c_type = self.store.get('cell_color')['type']
-            if c_type == 'text':
-                self.settings_widget.checkbox_colors.text_color.active = True
-                self.settings_widget.get_colors.button_text = 'Получить цвет шрифта ячеек'
-            if c_type == 'fill':
-                self.settings_widget.checkbox_colors.fill_color.active = True
-                self.settings_widget.get_colors.button_text = 'Получить цвет заливки ячеек'
-        if len(self.store.get('cell_color')['value']):
-            color = self.store.get('cell_color')['value']
-            self.settings_widget.choose_color.items = [color]
-
-        self.settings_widget.checkbox_colors.fill_color.bind(active=self.check_cell_colors)
-        self.settings_widget.checkbox_colors.text_color.bind(active=self.check_cell_colors)
         self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
 
         save_dir_path = self.store.get('save_dir_path')['path']
@@ -277,56 +237,20 @@ class Uploader(FloatLayout):
                 self.settings_widget.console.message = 'Ни одного url не было сохранено.'
                 self.settings_widget.category_site_urls.input.text = 'Введите url адреса страниц категорий сайтов (через запятую).'
 
-    def check_cell_colors(self, instance, is_active):
-        if instance.name == 'text_color':
-            self.settings_widget.get_colors.button_text = 'Получить цвет шрифта ячеек'
-        if instance.name == 'fill_color':
-            self.settings_widget.get_colors.button_text = 'Получить цвет заливки ячеек'
-        self.settings_widget.choose_color.items = []
-        self.settings_widget.choose_color.set_height()
-        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
-        self.settings_widget.console.message = ''
-
-    def save_cell_color(self):
-        color = self.settings_widget.choose_color.color
-        message = f'Выбран цвет [b][color=#{color}]{color}[/color][/b] '
-        c_type = ''
-        if self.settings_widget.checkbox_colors.text_color.active:
-            c_type = 'text'
-            message += f'текста выделенных ячеек'
-        elif self.settings_widget.checkbox_colors.fill_color.active:
-            c_type = 'fill'
-            message += f'заливки выделенных ячеек'
-        self.store['cell_color'] = {'type': c_type, 'value': color}
-        self.settings_widget.console.message = message
-        self.settings_widget.choose_color.items = [color]
-        self.settings_widget.choose_color.remove_button()
-        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
-        self.handle_widget.step_button.text = 'Шаг 1'
-        self.handle_widget.console.message = 'Консоль'
-
-    def get_cell_colors(self, name):
-        if 'table' in self.keeper.keys():
-            colors = []
-            if name == 'Получить цвет шрифта ячеек':
-                colors = ex.search_cell_font_colors(self.keeper['table'])
-                if colors:
-                    self.settings_widget.console.message = f'Цвета шрифта выделенных ячеек:\n'
-                else:
-                    self.settings_widget.console.message = f'В файле отсутствуют ячейки выделенные цветом шрифта.\n'
-            if name == 'Получить цвет заливки ячеек':
-                colors = ex.search_cell_fill_colors(self.keeper['table'])
-                if colors:
-                    self.settings_widget.console.message = f'Цвета заливки выделенных ячеек:\n'
-                else:
-                    self.settings_widget.console.message = f'В файле отсутствуют ячейки выделенные цветом заливки.\n'
-            if colors:
-                self.settings_widget.console.message += ', '.join(f'[b][color=#{c}]{c}[/color][/b]' for c in colors)
-                self.settings_widget.choose_color.items = colors
-                self.settings_widget.choose_color.add_button()
-                self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
+    def set_color(self, obj, name):
+        if not obj.panels:
+            panel = ColorsPanel()
+            obj.panels.append(panel)
         else:
-            self.settings_widget.console.message = 'Перейдите на вкладку "Обработка" и выполните "Шаг 1".'
+            self.store.put(name, color=obj.choose_color)
+            obj.panels = []
+        self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
+
+    def get_color(self, name):
+        if name == 'title_fill_color':
+            self.set_color(self.settings_widget.title_fill_color, name)
+        if name == 'title_font_color':
+            self.set_color(self.settings_widget.title_font_color, name)
 
     def load_press_step(self, text):
         """
@@ -336,13 +260,20 @@ class Uploader(FloatLayout):
         Step 4 - create a main table in database and save it in file.
         :param text: step button name
         """
-        missing = self.check_settings(['save_dir_path', 'db_file_name', 'file_name'])
+        missing = self.check_settings(['save_dir_path',
+                                       'db_file_name',
+                                       'file_name',
+                                       'title_fill_color',
+                                       'title_font_color'])
         if missing:
             self.load_widget.console.message = self.settings_report(missing)
         else:
             save_dir_path = self.store.get('save_dir_path')['path']
             db_file_name = self.store.get('db_file_name')['name']
             file_name = self.store.get('file_name')['name']
+            title_fill_color = self.store.get('title_fill_color')['color']
+            title_font_color = self.store.get('title_font_color')['color']
+            styles = [title_fill_color, title_font_color]
 
             if text == 'Шаг 1':
                 query = sql.get_table_info('catalog')
@@ -416,7 +347,7 @@ class Uploader(FloatLayout):
                         query, data = sql.get_insert_query(new_table_name, columns_names, data)
                         msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
                     if not msg:
-                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names)
+                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
                     if not msg:
                         msg = f'Файл {file_name} сохранен в папке {save_dir_path}.'
                     msg = msg
@@ -440,6 +371,8 @@ class Uploader(FloatLayout):
                                        'db_file_name',
                                        'update_file_name',
                                        'del_file_name',
+                                       'title_fill_color',
+                                       'title_font_color',
                                        'columns',
                                        'functions_names',
                                        'category_site_file_name',
@@ -456,10 +389,13 @@ class Uploader(FloatLayout):
             update_file_name = self.store.get('update_file_name')['name']
             del_file_name = self.store.get('del_file_name')['name']
             images_folder_name = self.store.get('images_folder_name')['name']
-            columns_names= ['categories',
-                            'categories_alias',
-                            'article',
-                            'article_alias']
+            columns_names = ['categories',
+                             'categories_alias',
+                             'article',
+                             'article_alias']
+            title_fill_color = self.store.get('title_fill_color')['color']
+            title_font_color = self.store.get('title_font_color')['color']
+            styles = [title_fill_color, title_font_color]
             if text == 'Шаг 1':
                 function_names = self.store.get('functions_names')['names']
                 message = ''
@@ -512,7 +448,7 @@ class Uploader(FloatLayout):
                         columns = list(zip(columns_names, columns_names))
                         query = sql.get_data_query(table_name, columns)
                         data = sql.make_response_query(save_dir_path, db_file_name, query)
-                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names)
+                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
                     if not msg:
                         self.parser_widget.console.message += f'Файл {file_name} сохранен в папке {save_dir_path}.\n'
                     if msg:
@@ -537,7 +473,8 @@ class Uploader(FloatLayout):
                         query, deleted_data = sql.get_insert_query('del_table', ['article'], deleted_data)
                         msg = sql.make_many_query(save_dir_path, db_file_name, query, deleted_data)
                         if not msg:
-                            msg = ex.get_file_from_data(save_dir_path, del_file_name, deleted_data, ['article'])
+                            msg = ex.get_file_from_data(save_dir_path, del_file_name,
+                                                        deleted_data, ['article'], styles)
                 if not msg:
                     self.parser_widget.console.message = f'Файл {del_file_name} сохранен в папке {save_dir_path}.\n'
                     self.parser_widget.step_button.text = 'Шаг 4'
@@ -584,7 +521,8 @@ class Uploader(FloatLayout):
                     query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
                     msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
                     if not msg:
-                        msg = ex.get_file_from_data(save_dir_path, update_file_name, update_table, columns_names[1:])
+                        msg = ex.get_file_from_data(save_dir_path, update_file_name,
+                                                    update_table, columns_names[1:], styles)
                     if not msg:
                         self.parser_widget.console.message = f'Файл {update_file_name} сохранен в папке {save_dir_path}.'
                         self.parser_widget.step_button.text = 'Шаг 1'

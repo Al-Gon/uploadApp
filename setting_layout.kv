@@ -11,11 +11,10 @@
     images_folder_name: images_folder_name
     update_file_name: update_file_name
     del_file_name: del_file_name
-    checkbox_colors: checkbox_colors
-    choose_color: choose_color
-    get_colors: get_colors
     category_site_file_name: category_site_file_name
     data_site_file_name: data_site_file_name
+    title_fill_color: title_fill_color
+    title_font_color: title_font_color
     category_site_urls: category_site_urls
     grid: grid
 
@@ -82,16 +81,6 @@
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'del_file_name_button'
 
-                CheckBoxColors:
-                    id: checkbox_colors
-
-                ButtonGetColors:
-                    id: get_colors
-                    button_text: 'Получить цвет шрифта ячеек'
-
-                ChooseColor:
-                    id: choose_color
-
                 InputBlock:
                     id: category_site_file_name
                     text_label: 'Имя файла для категорий данных сайта:'
@@ -103,6 +92,16 @@
                     text_label: 'Имя файла для данных сайта:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_сайт_месяц_дата.xlsx").'
                     button_name: 'data_site_file_name_button'
+
+                ChooseColorBlock:
+                    id: title_fill_color
+                    text_label: 'Цвет заливки "шапки" таблицы:'
+                    button_name: 'title_fill_color'
+
+                ChooseColorBlock:
+                    id: title_font_color
+                    text_label: 'Цвет шрифта "шапки" таблицы:'
+                    button_name: 'title_font_color'
 
                 InputBlock:
                     id: category_site_urls

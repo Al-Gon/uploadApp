@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import json
+from openpyxl.styles import Font, PatternFill, Side, Border, Alignment
 
 def check_file_path(file_path: str):
     try:
@@ -79,23 +80,23 @@ def get_worksheet(file_path: str):
     title_row = list(sh[1])
     return sh, title_row
 
-def separate_table(table: list, color: str, c_type: str):
-    table_color, table_normal, table_error = [], [], []
-    for j, row in enumerate(table):
-        try:
-            color_ = None
-            if c_type == 'text':
-                color_ = row[0].font.color.rgb
-            if c_type == 'fill':
-                color_ = row[0].fill.fgColor.rgb
-            if isinstance(color_, str) and color_ == 'FF' + color:
-                table_color.append(row)
-            else:
-                table_normal.append(row)
-        except AttributeError:
-            print(f'raw number =  {j}, value {row.value}')
-            table_error.append(row)
-    return table_color, table_normal, table_error
+# def separate_table(table: list, color: str, c_type: str):
+#     table_color, table_normal, table_error = [], [], []
+#     for j, row in enumerate(table):
+#         try:
+#             color_ = None
+#             if c_type == 'text':
+#                 color_ = row[0].font.color.rgb
+#             if c_type == 'fill':
+#                 color_ = row[0].fill.fgColor.rgb
+#             if isinstance(color_, str) and color_ == 'FF' + color:
+#                 table_color.append(row)
+#             else:
+#                 table_normal.append(row)
+#         except AttributeError:
+#             print(f'raw number =  {j}, value {row.value}')
+#             table_error.append(row)
+#     return table_color, table_normal, table_error
 
 
 def get_table(w_sheet, min_row: int, max_col: int):
@@ -127,13 +128,14 @@ def set_value(table: list, pos: int, val, incr: bool):
         row[pos].value = val
     return table
 
-def get_file_from_data(folder_path: str, file_name: str, data: list, columns_names: list):
+def get_file_from_data(folder_path: str, file_name: str, data: list, columns_names: list, styles: list):
     """
     Save data to the file with 'xlsx' extension.
     :param folder_path: folder_path
     :param file_name: file_name
     :param data: list of lists, each of which will be a row in file
     :param columns_names: names of columns in file.
+    :param styles: list of styles colors.
     :return: error_msg
     """
     full_path = os.path.join(folder_path, file_name)
@@ -147,36 +149,49 @@ def get_file_from_data(folder_path: str, file_name: str, data: list, columns_nam
         for row in [columns_names] + data:
             if isinstance(row[0], (str, int)):
                 ws.append(row)
+
+        thin = Side(border_style='thin', color='000000')
+        for i, row in enumerate(ws.iter_rows()):
+            for cell in row:
+                cell.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                if i:
+                    cell.fill = PatternFill('solid', fgColor='FFFFFF')
+                    cell.font = Font(color='000000')
+                else:
+                    cell.fill = PatternFill('solid', fgColor=styles[0])
+                    cell.font = Font(color=styles[1])
+
         try:
             wb.save(full_path)
         except PermissionError:
             error_msg = f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
     return error_msg
 
-def check_images(path: str, table: list):
-    template = r'[A-Z]+\d+[A-Z]+.+'
-    images = set()
-    if os.path.exists(path):
-        for f_name in os.listdir(path):
-            re_part = re.findall(template, f_name)
-            if re_part and f_name != re_part[0]:
-                if os.path.isfile(os.path.join(path, f_name)):
-                    os.rename(os.path.join(path, f_name), os.path.join(path, re_part[0]))
-                    print(f'File {f_name} was renamed to {re_part[0]}')
-
-            if f_name.endswith('.jpg'):
-                images.add(f_name.split('.')[0].split('_')[0])
-    articles = set(map(lambda x: x[2].value, table))
-
-    if len(articles) != len(images):
-        return f'Количество записей: в файле {len(articles)} в папке с фотографиями {len(images)}.\n', False
-    diff = articles.symmetric_difference(images)
-    for el in diff:
-        if el in articles and el not in images:
-            return f'Записи с артикулом {el} в таблице не соответствует ни одной фотографии.\n', False
-        if el in images and el not in articles:
-            return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
-    return f'Фотографии успешно проверены.\n', True
+# def check_images(path: str, table: list):
+#     template = r'[A-Z]+\d+[A-Z]+.+'
+#     images = set()
+#     if os.path.exists(path):
+#         for f_name in os.listdir(path):
+#             re_part = re.findall(template, f_name)
+#             if re_part and f_name != re_part[0]:
+#                 if os.path.isfile(os.path.join(path, f_name)):
+#                     os.rename(os.path.join(path, f_name), os.path.join(path, re_part[0]))
+#                     print(f'File {f_name} was renamed to {re_part[0]}')
+#
+#             if f_name.endswith('.jpg'):
+#                 images.add(f_name.split('.')[0].split('_')[0])
+#     articles = set(map(lambda x: x[2].value, table))
+#
+#     if len(articles) != len(images):
+#         return f'Количество записей: в файле {len(articles)} в папке с фотографиями {len(images)}.\n', False
+#     diff = articles.symmetric_difference(images)
+#     for el in diff:
+#         if el in articles and el not in images:
+#             return f'Записи с артикулом {el} в таблице не соответствует ни одной фотографии.\n', False
+#         if el in images and el not in articles:
+#             return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
+#     return f'Фотографии успешно проверены.\n', True
 
 def get_image_fields(alias: str, images_paths: list) -> tuple:
     """
@@ -203,8 +218,8 @@ def check_version(version: str):
                 "db_file_name": {"name": ""},
                 "file_name": {"name": ""},
                 "images_folder_name": {"name": ""},
-                "cell_color": {"type": "",
-                               "value": ""},
+                "title_fill_color": {"color": ""},
+                "title_font_color": {"color": ""},
                 "update_file_name": {"name": ""},
                 "del_file_name": {"name": ""},
                 "columns": {"names": []},

@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import re
 
 def accept_cookie(driver, url):
     driver.get(url)
@@ -57,9 +58,11 @@ def get_item_content(driver, item_url: str):
     driver.get(item_url)
     introtext = ''
     header = find_element(driver, By.CSS_SELECTOR, 'div.show-info__header .show-info__title')
-    description = find_elements(driver, By.CSS_SELECTOR, 'div.show-info__description p')
+    description = find_element(driver, By.CSS_SELECTOR, 'div.show-info__description')
     if description:
-        introtext += ' '.join([el.text for el in description if el.text.strip()]) + ' '
+        if hasattr(description, 'text'):
+            description = re.sub('\s+', ' ', description.text).strip()
+            introtext = description.lstrip('Description ')
     table = find_element(driver, By.CSS_SELECTOR, 'div.show-info__specifications table')
     table_ = {}
     for tr in table.find_elements(By.TAG_NAME, 'tr'):
