@@ -1,6 +1,7 @@
 from kivy.uix.label import Label
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.utils import get_color_from_hex
 from kivy.graphics import Color, Rectangle
@@ -9,7 +10,8 @@ class ColorLabel(Label):
     def __init__(self, color_, **kwargs):
         super(ColorLabel, self).__init__(**kwargs)
         self.color_ = color_
-        self.height = 30
+        # self.height = 30
+        # self.padding = [5, 5]
         with self.canvas.before:
             Color(*get_color_from_hex(self.color_))
             self.rect = Rectangle(pos=self.pos, size=self.size)
@@ -24,11 +26,14 @@ class ColorItem(BoxLayout):
     def __init__(self, item_color, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
-        self.padding = [5, 10]
         self.item_color = item_color
-        self.check_box = CheckBox(group='colors', active=False, color=get_color_from_hex('000000'))
-        self.add_widget(self.check_box)
-        self.add_widget(ColorLabel(item_color))
+        check_box = AnchorLayout(size_hint=(1, .5), anchor_x='center', anchor_y='center')
+        self.check_box = CheckBox(group='colors', active=False,
+                                  color=get_color_from_hex('000000'))
+        check_box.add_widget(self.check_box)
+        self.add_widget(check_box)
+        self.add_widget(ColorLabel(item_color, size_hint=(1, .5)))
+
 
 class ColorsPanel(GridLayout):
     def __init__(self, **kwargs):
@@ -45,6 +50,7 @@ class ColorsPanel(GridLayout):
         self.cols = 5
         self.rows = len(colors) // 5
         self.height = self.rows * 60
+        self.padding = [10, 10]
         for color in colors:
             color_item = ColorItem(color)
             color_item.check_box.bind(active=self.get_color)
@@ -52,4 +58,4 @@ class ColorsPanel(GridLayout):
 
     def get_color(self, instance, is_active):
         if self.parent:
-            self.parent.choose_color = instance.parent.item_color
+            self.parent.choose_color = instance.parent.parent.item_color

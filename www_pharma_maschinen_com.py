@@ -24,7 +24,7 @@ def get_categories(driver, site: str):
         href = a.get_attribute('href')
         text = a.get_attribute('text')
         if text != 'New Arrivals':
-            categories.append([text, href])
+            categories.append((text, href))
     return categories
 
 def get_products(driver, category_url: str):

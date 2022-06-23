@@ -49,58 +49,13 @@ def del_dir_files(dir_path: str) -> bool:
     else:
         return True
 
-def search_cell_font_colors(table: list):
-    font_colors = set()
-    for row in table:
-        for cell in row:
-            try:
-                color = cell.font.color.rgb
-                if isinstance(color, str):
-                    font_colors.add(color[2:])
-            except AttributeError:
-                print(cell)
-    return list(font_colors)
-
-def search_cell_fill_colors(table: list):
-    fill_colors = set()
-    for row in table:
-        for cell in row:
-            if cell.fill.fill_type is not None:
-                try:
-                    color = cell.fill.fgColor.rgb
-                    if isinstance(color, str):
-                        fill_colors.add(color[2:])
-                except AttributeError:
-                    print(cell)
-    return list(fill_colors)
-
 def get_worksheet(file_path: str):
     wb = openpyxl.load_workbook(file_path)
     sh = wb.active
     title_row = list(sh[1])
     return sh, title_row
 
-# def separate_table(table: list, color: str, c_type: str):
-#     table_color, table_normal, table_error = [], [], []
-#     for j, row in enumerate(table):
-#         try:
-#             color_ = None
-#             if c_type == 'text':
-#                 color_ = row[0].font.color.rgb
-#             if c_type == 'fill':
-#                 color_ = row[0].fill.fgColor.rgb
-#             if isinstance(color_, str) and color_ == 'FF' + color:
-#                 table_color.append(row)
-#             else:
-#                 table_normal.append(row)
-#         except AttributeError:
-#             print(f'raw number =  {j}, value {row.value}')
-#             table_error.append(row)
-#     return table_color, table_normal, table_error
-
-
 def get_table(w_sheet, min_row: int, max_col: int):
-
     main_table = []
     max_row = 0
     for i, row in enumerate(w_sheet.iter_rows(min_row=min_row, max_col=max_col)):
@@ -116,17 +71,6 @@ def get_table(w_sheet, min_row: int, max_col: int):
         main_table.append(new_row)
 
     return main_table, max_row
-
-def set_value(table: list, pos: int, val, incr: bool):
-    for row in table:
-        if incr:
-            try:
-                val += 1
-            except TypeError:
-                print('TypeError param val in set_value :(')
-                break
-        row[pos].value = val
-    return table
 
 def get_file_from_data(folder_path: str, file_name: str, data: list, columns_names: list, styles: list):
     """
@@ -167,31 +111,6 @@ def get_file_from_data(folder_path: str, file_name: str, data: list, columns_nam
         except PermissionError:
             error_msg = f'Ошибка доступа к файлу {full_path}. Закройте файл.\n'
     return error_msg
-
-# def check_images(path: str, table: list):
-#     template = r'[A-Z]+\d+[A-Z]+.+'
-#     images = set()
-#     if os.path.exists(path):
-#         for f_name in os.listdir(path):
-#             re_part = re.findall(template, f_name)
-#             if re_part and f_name != re_part[0]:
-#                 if os.path.isfile(os.path.join(path, f_name)):
-#                     os.rename(os.path.join(path, f_name), os.path.join(path, re_part[0]))
-#                     print(f'File {f_name} was renamed to {re_part[0]}')
-#
-#             if f_name.endswith('.jpg'):
-#                 images.add(f_name.split('.')[0].split('_')[0])
-#     articles = set(map(lambda x: x[2].value, table))
-#
-#     if len(articles) != len(images):
-#         return f'Количество записей: в файле {len(articles)} в папке с фотографиями {len(images)}.\n', False
-#     diff = articles.symmetric_difference(images)
-#     for el in diff:
-#         if el in articles and el not in images:
-#             return f'Записи с артикулом {el} в таблице не соответствует ни одной фотографии.\n', False
-#         if el in images and el not in articles:
-#             return f'Фотографии {el} в папке нет соответствующей записи в таблице.\n', False
-#     return f'Фотографии успешно проверены.\n', True
 
 def get_image_fields(alias: str, images_paths: list) -> tuple:
     """

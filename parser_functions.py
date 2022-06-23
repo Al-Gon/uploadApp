@@ -3,7 +3,7 @@ from selenium.common.exceptions import NoSuchElementException
 import requests
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
-import importlib.util
+# import importlib.util
 import os
 import json
 
@@ -22,22 +22,22 @@ def get_translation(text: str):
     data = json.loads(response.text)
     return data['responseData']['translatedText']
 
-def import_source(module_file_path, module_name):
-    module_spec = importlib.util.spec_from_file_location(
-        module_name, module_file_path
-    )
-    if module_spec is None:
-        return None
-    else:
-        print('Module: {} can be imported!'.format(module_name))
-        module = importlib.util.module_from_spec(module_spec)
-        module_spec.loader.exec_module(module)
-        return module
-
-def missed_function(module, function_names: list) -> list:
-    """Returns missed functions which have to be in module"""
-    return [name for name in function_names if name not in module.__dict__.keys()]
-
+# def import_source(module_file_path, module_name):
+#     module_spec = importlib.util.spec_from_file_location(
+#         module_name, module_file_path
+#     )
+#     if module_spec is None:
+#         return None
+#     else:
+#         print('Module: {} can be imported!'.format(module_name))
+#         module = importlib.util.module_from_spec(module_spec)
+#         module_spec.loader.exec_module(module)
+#         return module
+#
+# def missed_function(module, function_names: list) -> list:
+#     """Returns missed functions which have to be in module"""
+#     return [name for name in function_names if name not in module.__dict__.keys()]
+#
 def check_url(url: str):
     try:
         response = requests.get(url)

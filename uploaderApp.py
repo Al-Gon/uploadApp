@@ -4,6 +4,7 @@ import sys
 import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
+import validate_function as vl
 from handlerscroll import HandlerScroll
 from colorspanel import ColorsPanel
 from kivy.resources import resource_add_path
@@ -359,11 +360,12 @@ class Uploader(FloatLayout):
     def parser_press_step(self, text: str):
         """
         Step 1 - connecting modules, checking for useful functions in modules
-        Step 2 - creating tables for product categories, parsing categories and writing to tables
+        Step 2 - validate useful functions in modules
+        Step 3 - creating tables for product categories, parsing categories and writing to tables
             (if the table is already created, the old data will be deleted)
-        Step 3 - creating a table to store the values of certain fields, which will be searched
+        Step 4 - creating a table to store the values of certain fields, which will be searched
             rows and removing them from the main table
-        Step 4 - create a table for updating, create a folder with products images
+        Step 5 - create a table for updating, create a folder with products images
         At each step each table is saved in file.
         :param text: step button name
         """
@@ -406,12 +408,12 @@ class Uploader(FloatLayout):
                     #         f.write(text)
                     #     self.parser_widget.console.message = f'Функции записаны в файл {file_name}.'
 
-                    module = pr.import_source(os.path.join(save_dir_path, file_name), m_name)
+                    module = vl.import_source(os.path.join(save_dir_path, file_name), m_name)
                     if module is None:
                         message += f'Модуль из файла {file_name} не обнаружен.'
                         break
                     else:
-                        missed_function = pr.missed_function(module, function_names)
+                        missed_function = vl.missed_function(module, function_names)
                         message += f'Модуль из файла {file_name} загружен успешно.\n'
                         if missed_function:
                             message += f'\nДанные функции отсутствуют в модуле: {", ".join(missed_function)}'
@@ -421,6 +423,45 @@ class Uploader(FloatLayout):
                 self.parser_widget.console.message = message
 
             if text == 'Шаг 2':
+                urls = self.store.get('category_site_urls')['urls']
+                driver = pr.get_driver()
+                self.parser_widget.console.message = ''
+                self.parser_widget.input_field.text = ''
+                flag = False
+                for url in urls:
+                    m_name = pr.get_site_name(url)
+                    self.parser_widget.input_field.text += f'Проверка функции get_categories модуля {m_name}.py.\n'
+                    categories = self.keeper[m_name].get_categories(driver, url)
+                    flag, res = vl.check_get_prod_cat(categories)
+                    if flag:
+                        self.parser_widget.input_field.text += f'Результат: {res}\n'
+                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
+                        self.parser_widget.input_field.text += f'Проверка функции get_products модуля {m_name}.py.\n'
+                        items_href = self.keeper[m_name].get_products(driver, res)
+                        flag, res = vl.check_get_prod_cat(items_href)
+                    if flag:
+                        self.parser_widget.input_field.text += f'Результат: {res}\n'
+                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
+                        self.parser_widget.input_field.text += f'Проверка функции get_item_content модуля {m_name}.py.\n'
+                        item_content = self.keeper[m_name].get_item_content(driver, res)
+                        flag, result = vl.check_get_item(item_content)
+                    if flag:
+                        self.parser_widget.input_field.text += f'Результат: {result}\n'
+                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
+                        self.parser_widget.input_field.text += f'Проверка функции get_item_images модуля {m_name}.py.\n'
+                        images = self.keeper[m_name].get_item_images(driver, res)
+                        flag, _ = vl.check_get_images(images)
+                    if flag:
+                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
+                    if not flag:
+                        self.parser_widget.console.message += f'Произошла ошибка: {res}.'
+                        break
+                driver.close()
+                if flag:
+                    self.parser_widget.console.message += 'Проверка прошла успешно.\n'
+                    self.parser_widget.step_button.text = 'Шаг 3'
+
+            if text == 'Шаг 3':
                 msg = ''
                 self.parser_widget.console.message = ''
                 for i, m_name in enumerate(module_names):
@@ -455,9 +496,9 @@ class Uploader(FloatLayout):
                         self.parser_widget.console.message += msg
                         break
                 if not msg:
-                    self.parser_widget.step_button.text = 'Шаг 3'
+                    self.parser_widget.step_button.text = 'Шаг 4'
 
-            if text == 'Шаг 3':
+            if text == 'Шаг 4':
                 msg = ''
                 if not sql.make_response_query(save_dir_path, db_file_name, sql.check_table('del_table')):
                     query = sql.create_table('del_table', ['id', 'article'])
@@ -477,11 +518,11 @@ class Uploader(FloatLayout):
                                                         deleted_data, ['article'], styles)
                 if not msg:
                     self.parser_widget.console.message = f'Файл {del_file_name} сохранен в папке {save_dir_path}.\n'
-                    self.parser_widget.step_button.text = 'Шаг 4'
+                    self.parser_widget.step_button.text = 'Шаг 5'
                 else:
                     self.parser_widget.console.message = msg
 
-            if text == 'Шаг 4':
+            if text == 'Шаг 5':
                 query = sql.update_data_query(tables_names)
                 update_data = sql.make_response_query(save_dir_path, db_file_name, query)
                 if not update_data:

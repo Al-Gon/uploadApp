@@ -22,14 +22,12 @@ def find_element(driver, by, way: str):
     except NoSuchElementException:
         print(f'Element {way.split(" ")[-1]} not found')
 
-
 def find_elements(driver, by, way: str):
     try:
         elements = driver.find_elements(by, way)
         return elements
     except NoSuchElementException:
         print(f'Elements {way.split(" ")[-1]} not found')
-
 
 def get_categories(driver, site: str):
     driver.get(site)
@@ -39,6 +37,9 @@ def get_categories(driver, site: str):
     for item in categories_list:
         a = item.find_element(By.CSS_SELECTOR, 'div.categories-card-container h2.title a')
         href = a.get_attribute('href')
+        if '/en/' not in href:
+            href_ = href.rsplit('/', 1)
+            href = href_[0] + '/en/' + href_[1]
         text = a.get_attribute('text')
         categories.add((text, href))
     return list(categories)
@@ -90,4 +91,7 @@ def get_item_images(driver, item_url: str):
         for item in images_container:
             img = item.find_element(By.TAG_NAME, 'img')
             images.append(img.get_attribute('src'))
+    else:
+        img = driver.find_element(By.CSS_SELECTOR, '#gallery img.gallery-image')
+        images.append(img.get_attribute('src'))
     return images
