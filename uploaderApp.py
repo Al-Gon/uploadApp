@@ -1,6 +1,5 @@
 import os
 import sys
-
 import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
@@ -14,8 +13,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.properties import StringProperty, ListProperty, ObjectProperty, NumericProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.storage.jsonstore import JsonStore
+import threading
+import time
+from kivy.clock import mainthread
 from kivy.core.window import Window
 from kivy.app import App
 from kivy.lang import Builder
@@ -77,11 +79,76 @@ class HandleLayout(BoxLayout):
         self.settings_widget = NumericProperty()
         self.handler_scroll = HandlerScroll(size_hint=(1, None))
         self.scroll.add_widget(self.handler_scroll)
-    pass
 
 class ParserLayout(BoxLayout):
+    message = StringProperty('')
     grid_height = NumericProperty()
-    pass
+    use_thread = False
+    results = ListProperty([])
+
+    def check_operations(self, operations: dict):
+        """
+        Starts two new threads. First one for graphics, second one for validation parsing functions process.
+        :param operations - a dictionary of elements of the following type
+        [url](name_operation, module_name, operation, validator)
+        """
+        if not self.use_thread:
+            self.use_thread = True
+            t1 = threading.Thread(target=self.get_message, daemon=True)
+            t2 = threading.Thread(target=pr.check_procedure, args=(operations, self.transfer, self.set_use_thread))
+            t1.start()
+            t2.start()
+
+    def on_results(self, instance, value):
+        """A callback to track changes to property."""
+        if self.results:
+            self.console.message = ''
+            name_operation, m_name, flag, href = self.results[-1]
+            if flag:
+                self.console.message += f'Проверка функции {name_operation} модуля {m_name}.py прошла успешно.\n'
+            else:
+                self.console.message += f'Проверка функции {name_operation} модуля {m_name}.py ошибка: {href}.\n'
+
+    @mainthread
+    def transfer(self, result: tuple):
+        """A callback for transfer result."""
+        self.results.append(result)
+
+    @mainthread
+    def set_use_thread(self):
+        """A callback for catching the finishing of validation process."""
+        self.use_thread = False
+        time.sleep(.5)
+        errors = [res for res in self.results if not res[2]]
+        self.results = []
+        if not errors:
+            self.step_button.text = 'Шаг 3'
+            self.console.message = 'Проверка закончена. Нажмите кнопку "Шаг 3".'
+        else:
+            message = '\n'.join([f'Модуль {err[1]} метод "{err[0]}" результат: {err[3]}.' for err in errors])
+            self.console.message = message + '\nИсправьте ошибки.'
+
+    def get_message(self):
+        """This function use for graphics representation of validation process."""
+        counter = 0
+        message = ["     "] * 10
+        use_thread = True
+        self.set_message("Начало проверки.\n")
+        while use_thread:
+            time.sleep(.5)
+            index = counter % 10
+            message[index] = " *** "
+            self.set_message(''.join(message))
+            message[index] = "     "
+            counter += 1
+            use_thread = self.use_thread
+        self.set_message("Конец проверки.\n")
+
+    @mainthread
+    def set_message(self, message):
+        """A callback for output new message."""
+        self.message = message
+
 
 class UploadLayout(BoxLayout):
     pass
@@ -423,43 +490,22 @@ class Uploader(FloatLayout):
                 self.parser_widget.console.message = message
 
             if text == 'Шаг 2':
-                urls = self.store.get('category_site_urls')['urls']
-                driver = pr.get_driver()
-                self.parser_widget.console.message = ''
-                self.parser_widget.input_field.text = ''
-                flag = False
-                for url in urls:
-                    m_name = pr.get_site_name(url)
-                    self.parser_widget.input_field.text += f'Проверка функции get_categories модуля {m_name}.py.\n'
-                    categories = self.keeper[m_name].get_categories(driver, url)
-                    flag, res = vl.check_get_prod_cat(categories)
-                    if flag:
-                        self.parser_widget.input_field.text += f'Результат: {res}\n'
-                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
-                        self.parser_widget.input_field.text += f'Проверка функции get_products модуля {m_name}.py.\n'
-                        items_href = self.keeper[m_name].get_products(driver, res)
-                        flag, res = vl.check_get_prod_cat(items_href)
-                    if flag:
-                        self.parser_widget.input_field.text += f'Результат: {res}\n'
-                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
-                        self.parser_widget.input_field.text += f'Проверка функции get_item_content модуля {m_name}.py.\n'
-                        item_content = self.keeper[m_name].get_item_content(driver, res)
-                        flag, result = vl.check_get_item(item_content)
-                    if flag:
-                        self.parser_widget.input_field.text += f'Результат: {result}\n'
-                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
-                        self.parser_widget.input_field.text += f'Проверка функции get_item_images модуля {m_name}.py.\n'
-                        images = self.keeper[m_name].get_item_images(driver, res)
-                        flag, _ = vl.check_get_images(images)
-                    if flag:
-                        self.parser_widget.input_field.text += 'Проверка прошла успешно.\n'
-                    if not flag:
-                        self.parser_widget.console.message += f'Произошла ошибка: {res}.'
-                        break
-                driver.close()
-                if flag:
-                    self.parser_widget.console.message += 'Проверка прошла успешно.\n'
-                    self.parser_widget.step_button.text = 'Шаг 3'
+                if not self.parser_widget.use_thread:
+                    urls = self.store.get('category_site_urls')['urls']
+                    operations = {}
+                    for url in urls:
+                        operations[url] = []
+                        m_name = pr.get_site_name(url)
+                        operations[url].append(
+                            ('get_categories', m_name, self.keeper[m_name].get_categories, vl.check_get_prod_cat))
+                        operations[url].append(
+                            ('get_products', m_name, self.keeper[m_name].get_products, vl.check_get_prod_cat))
+                        operations[url].append(
+                            ('get_item_images', m_name, self.keeper[m_name].get_item_images, vl.check_get_images))
+                        operations[url].append(
+                            ('get_item_content', m_name, self.keeper[m_name].get_item_content, vl.check_get_item))
+
+                    self.parser_widget.check_operations(operations)
 
             if text == 'Шаг 3':
                 msg = ''

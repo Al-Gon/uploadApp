@@ -8,7 +8,6 @@
     console: console
     input_field: input_field
 
-
     canvas:
         Color:
             rgba: utils.get_color_from_hex('#bcbcbc')
@@ -25,26 +24,19 @@
     AnchorLayout:
         anchor_x: 'center'
         anchor_y: 'center'
-        size_hint: 1, .4
+        size_hint: 1, .5
 
-        ScrollView:
-            scroll_type: ['bars', 'content']
-            do_scroll_x: False
-            do_scroll_y: True
+        TextInput:
+            id: input_field
             size_hint: .96, .96
-            bar_width: 10
-            bar_color: utils.get_color_from_hex('#ffffff')
-            bar_inactive_color: utils.get_color_from_hex('#eeeeee')
+            #height: 1000
+            padding: 10, 10
+            multiline: True
+            markup: True
+            background_normal: 'white_pixel.png'
+            background_active: 'white_pixel.png'
+            text: root.message
 
-            TextInput:
-                id: input_field
-                size_hint: 1, None
-                height: self.parent.height
-                padding: 10, 10
-                multiline: True
-                markup: True
-                background_normal: 'white_pixel.png'
-                background_active: 'white_pixel.png'
 
     AnchorLayout:
         #pos_hint: {'x':0, 'y':0}

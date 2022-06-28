@@ -54,15 +54,15 @@ def is_src(list_: list):
 def check_get_prod_cat(list_: list):
     try:
         if not isinstance(list_, list):
-            raise ValueError('возвращаемый результат не является списоком.\n')
+            raise ValueError('возвращаемый результат не является списоком')
         elif not list_:
-            raise ValueError('возвращаемый список пуст.\n')
+            raise ValueError('возвращаемый список пуст')
         elif not is_list_of_tuples(list_):
-            raise ValueError('элемент списка не является кортежем из двух элементов.\n')
+            raise ValueError('элемент списка не является кортежем из двух элементов')
         elif not is_tuple_of_str(list_):
-            raise ValueError('элементы кортежа не являются строками.\n')
+            raise ValueError('элементы кортежа не являются строками')
         elif not is_href(list_):
-            raise ValueError('второй элемент кортежа не ссылка.\n')
+            raise ValueError('второй элемент кортежа не ссылка')
         else:
             return True, list_[0][1]
     except ValueError as e:
@@ -71,13 +71,13 @@ def check_get_prod_cat(list_: list):
 def check_get_item(list_: list):
     try:
         if not isinstance(list_, list):
-            raise ValueError('возвращаемый результат не является списоком.\n')
+            raise ValueError('возвращаемый результат не является списоком')
         elif not list_:
-            raise ValueError('возвращаемый список пуст.\n')
+            raise ValueError('возвращаемый список пуст')
         elif not len(list_) == 7:
-            raise ValueError('количество элементов возвращаемого списока не равно 7.\n')
+            raise ValueError('количество элементов возвращаемого списока не равно 7')
         elif not is_list_of_str(list_):
-            raise ValueError('элементы списка не являются строками.\n')
+            raise ValueError('элементы списка не являются строками')
         else:
             return True, '", "'.join(list_)
     except ValueError as e:
@@ -86,13 +86,13 @@ def check_get_item(list_: list):
 def check_get_images(list_: list):
     try:
         if not isinstance(list_, list):
-            raise ValueError('возвращаемый результат не является списоком.\n')
+            raise ValueError('возвращаемый результат не является списоком')
         elif not list_:
-            raise ValueError('возвращаемый список пуст.\n')
+            raise ValueError('возвращаемый список пуст')
         elif not is_list_of_str(list_):
-            raise ValueError('элементы списка не являются строками.\n')
+            raise ValueError('элементы списка не являются строками')
         elif not is_src(list_):
-            raise ValueError('элементы списка не являются ссылками на файлы jpg или png.\n')
+            raise ValueError('элементы списка не являются ссылками на файлы jpg или png')
         else:
             return True, ''
     except ValueError as e:
