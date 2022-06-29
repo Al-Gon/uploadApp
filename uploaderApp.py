@@ -85,29 +85,40 @@ class ParserLayout(BoxLayout):
     grid_height = NumericProperty()
     use_thread = False
     results = ListProperty([])
+    msg_templates = {'check_procedure': ('Проверка функции {2} модуля {3}.py ошибка: {4}.\n',
+                                         'Проверка функции {2} модуля {3}.py прошла успешно.\n',
+                                         'Шаг 3',
+                                         'Проверка закончена. Нажмите кнопку "Шаг 3".',
+                                         'Модуль {err[3]} метод "{err[2]}" результат: {err[4]}.'
+                                         ),
+                     'parsing_category_procedure': ('При работе над файлом {3} произошла ошибка: {2}.',
+                                                    'Файл {3} успешно сохранен в папке {4}.\n',
+                                                    'Шаг 4',
+                                                    'Обработка закончена. Нажмите кнопку "Шаг 4".',
+                                                    'При работе над файлом {3} произошла ошибка: {2}')}
 
-    def check_operations(self, operations: dict):
+    def threads_operation(self, procedure, params: dict, messages: tuple):
         """
         Starts two new threads. First one for graphics, second one for validation parsing functions process.
-        :param operations - a dictionary of elements of the following type
+        :param procedure - name of method
+        :param params - a dictionary of elements of the following type
         [url](name_operation, module_name, operation, validator)
+        :param messages - start and end messages for threads.
         """
         if not self.use_thread:
             self.use_thread = True
-            t1 = threading.Thread(target=self.get_message, daemon=True)
-            t2 = threading.Thread(target=pr.check_procedure, args=(operations, self.transfer, self.set_use_thread))
+            t1 = threading.Thread(target=self.get_message, args=(messages, ), daemon=True)
+            t2 = threading.Thread(target=procedure,
+                                  args=(params, self.transfer, self.set_use_thread))
             t1.start()
             t2.start()
 
     def on_results(self, instance, value):
         """A callback to track changes to property."""
         if self.results:
-            self.console.message = ''
-            name_operation, m_name, flag, href = self.results[-1]
-            if flag:
-                self.console.message += f'Проверка функции {name_operation} модуля {m_name}.py прошла успешно.\n'
-            else:
-                self.console.message += f'Проверка функции {name_operation} модуля {m_name}.py ошибка: {href}.\n'
+            result = self.results[-1]
+            msg_template = self.msg_templates[result[0]]
+            self.console.message = msg_template[int(result[1])].format(*result)
 
     @mainthread
     def transfer(self, result: tuple):
@@ -119,30 +130,34 @@ class ParserLayout(BoxLayout):
         """A callback for catching the finishing of validation process."""
         self.use_thread = False
         time.sleep(.5)
-        errors = [res for res in self.results if not res[2]]
-        self.results = []
+        msg_template = self.msg_templates[self.results[-1][0]]
+        errors = [res for res in self.results if not res[1]]
         if not errors:
-            self.step_button.text = 'Шаг 3'
-            self.console.message = 'Проверка закончена. Нажмите кнопку "Шаг 3".'
+            self.step_button.text = msg_template[2]
+            self.console.message = msg_template[3]
         else:
-            message = '\n'.join([f'Модуль {err[1]} метод "{err[0]}" результат: {err[3]}.' for err in errors])
+            message = '\n'.join([msg_template[4].format(*err) for err in errors])
             self.console.message = message + '\nИсправьте ошибки.'
+        self.results = []
 
-    def get_message(self):
-        """This function use for graphics representation of validation process."""
+    def get_message(self, messages: tuple):
+        """
+        This function use for graphics representation of validation process.
+        :param messages - start and end messages for threads.
+        """
         counter = 0
-        message = ["     "] * 10
+        strip = ["     "] * 10
         use_thread = True
-        self.set_message("Начало проверки.\n")
+        self.set_message(messages[0])
         while use_thread:
             time.sleep(.5)
             index = counter % 10
-            message[index] = " *** "
-            self.set_message(''.join(message))
-            message[index] = "     "
+            strip[index] = " *** "
+            self.set_message(''.join(strip))
+            strip[index] = "     "
             counter += 1
             use_thread = self.use_thread
-        self.set_message("Конец проверки.\n")
+        self.set_message(messages[1])
 
     @mainthread
     def set_message(self, message):
@@ -403,7 +418,6 @@ class Uploader(FloatLayout):
                     query = sql.get_data_query(table_name, self.keeper['columns'])
                     data = sql.make_response_query(save_dir_path, db_file_name, query)
                     new_table_name = 'new_catalog'
-                    msg = ''
                     _, columns_names = zip(*self.keeper['columns'])
                     if sql.make_response_query(save_dir_path, db_file_name, sql.check_table(new_table_name)):
                         query, _ = sql.get_delete_query(new_table_name)
@@ -491,58 +505,41 @@ class Uploader(FloatLayout):
 
             if text == 'Шаг 2':
                 if not self.parser_widget.use_thread:
-                    urls = self.store.get('category_site_urls')['urls']
-                    operations = {}
+                    self.parser_widget.console.message = 'Производиться проверка.\n'
+                    params = {}
                     for url in urls:
-                        operations[url] = []
+                        params[url] = []
                         m_name = pr.get_site_name(url)
-                        operations[url].append(
+                        params[url].append(
                             ('get_categories', m_name, self.keeper[m_name].get_categories, vl.check_get_prod_cat))
-                        operations[url].append(
+                        params[url].append(
                             ('get_products', m_name, self.keeper[m_name].get_products, vl.check_get_prod_cat))
-                        operations[url].append(
+                        params[url].append(
                             ('get_item_images', m_name, self.keeper[m_name].get_item_images, vl.check_get_images))
-                        operations[url].append(
+                        params[url].append(
                             ('get_item_content', m_name, self.keeper[m_name].get_item_content, vl.check_get_item))
-
-                    self.parser_widget.check_operations(operations)
+                    messages = ['Начало проверки.\n', 'Конец проверки.\n']
+                    self.parser_widget.threads_operation(pr.check_procedure, params, messages)
 
             if text == 'Шаг 3':
-                msg = ''
-                self.parser_widget.console.message = ''
-                for i, m_name in enumerate(module_names):
-                    table_name = f'{m_name}'
-                    file_name = self.store.get('category_site_file_name')['name'].replace('{site}', m_name)
-                    query = sql.create_table(table_name, columns_names)
-                    msg = sql.make_query(save_dir_path, db_file_name, query)
-                    if not msg:
-                        query, _ = sql.get_delete_query(table_name)
-                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
-                    if not msg:
-                        driver = pr.get_driver()
-                        categories = self.keeper[m_name].get_categories(driver, urls[i])
-                        data = []
-                        for name, href in categories:
-                            if not driver.cookie:
-                                self.keeper[m_name].accept_cookie(driver, href)
-                            start = [name, href]
-                            rows = self.keeper[m_name].get_products(driver, href)
-                            data += [start + list(row) for row in rows]
-                        driver.close()
-                        query, data = sql.get_insert_query(table_name, columns_names, data)
-                        msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                    if not msg:
-                        columns = list(zip(columns_names, columns_names))
-                        query = sql.get_data_query(table_name, columns)
-                        data = sql.make_response_query(save_dir_path, db_file_name, query)
-                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
-                    if not msg:
-                        self.parser_widget.console.message += f'Файл {file_name} сохранен в папке {save_dir_path}.\n'
-                    if msg:
-                        self.parser_widget.console.message += msg
-                        break
-                if not msg:
-                    self.parser_widget.step_button.text = 'Шаг 4'
+                if not self.parser_widget.use_thread:
+                    self.parser_widget.console.message = 'Производиться парсинг.\n'
+                    params = {'save_dir_path': save_dir_path,
+                              'db_file_name': db_file_name,
+                              'columns_names': columns_names,
+                              'styles': styles,
+                              'urls': {}
+                              }
+                    for i, m_name in enumerate(module_names):
+                        table_name = f'{m_name}'
+                        file_name = self.store.get('category_site_file_name')['name'].replace('{site}', m_name)
+                        params['urls'][urls[i]] = (table_name,
+                                                   file_name,
+                                                   self.keeper[m_name].get_categories,
+                                                   self.keeper[m_name].accept_cookie,
+                                                   self.keeper[m_name].get_products)
+                    messages = ['Начало парсинга.\n', 'Конец парсинга.\n']
+                    self.parser_widget.threads_operation(pr.parsing_category_procedure, params, messages)
 
             if text == 'Шаг 4':
                 msg = ''

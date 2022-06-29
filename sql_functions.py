@@ -22,6 +22,7 @@ def make_response_query(db_folder_path: str, db_file: str, querystring: str):
         if con:
             con.rollback()
         error_msg = f'Error: {err}'
+        print(error_msg)
     finally:
         if con:
             con.close()
