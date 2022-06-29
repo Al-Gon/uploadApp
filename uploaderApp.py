@@ -1,5 +1,7 @@
 import os
 import sys
+import threading
+import time
 import excel_functions as ex
 import sql_functions as sql
 import parser_functions as pr
@@ -15,8 +17,6 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.storage.jsonstore import JsonStore
-import threading
-import time
 from kivy.clock import mainthread
 from kivy.core.window import Window
 from kivy.app import App
@@ -225,7 +225,7 @@ class Uploader(FloatLayout):
             self.load_widget.console.message = 'Колонки и представления для выгрузки в файл:\n'
             self.load_widget.console.message += '\n'.join([f'{i}. {col[0]} "{col[1]}"' for i, col in enumerate(self.keeper['columns'])])
             self.load_widget.console.message += f'\nЕсли нужно выгрузить данные из данных колонок в файл нажмите "Шаг 4".'\
-                                            f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
+                                                f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
 
     @staticmethod
     def grid_height(inst):
