@@ -89,13 +89,19 @@ class ParserLayout(BoxLayout):
                                          'Проверка функции {2} модуля {3}.py прошла успешно.\n',
                                          'Шаг 3',
                                          'Проверка закончена. Нажмите кнопку "Шаг 3".',
-                                         'Модуль {err[3]} метод "{err[2]}" результат: {err[4]}.'
+                                         'Модуль {err[3]} метод "{err[2]}" результат: {err[4]}.\n'
                                          ),
-                     'parsing_category_procedure': ('При работе над файлом {3} произошла ошибка: {2}.',
+                     'parsing_category_procedure': ('При работе над файлом {3} произошла ошибка: {2}.\n',
                                                     'Файл {3} успешно сохранен в папке {4}.\n',
                                                     'Шаг 4',
                                                     'Обработка закончена. Нажмите кнопку "Шаг 4".',
-                                                    'При работе над файлом {3} произошла ошибка: {2}')}
+                                                    'При работе над файлом {3} произошла ошибка: {2}.\n'),
+                     'parsing_item_procedure': ('При работе над файлом {3} произошла ошибка: {2}.\n',
+                                                'Файл {3} успешно сохранен в папке {4}.\n',
+                                                'Шаг 1',
+                                                'Обработка закончена.',
+                                                'При работе над файлом {3} произошла ошибка: {2}.\n')
+                     }
 
     def threads_operation(self, procedure, params: dict, messages: tuple):
         """
@@ -126,7 +132,7 @@ class ParserLayout(BoxLayout):
         self.results.append(result)
 
     @mainthread
-    def set_use_thread(self):
+    def set_use_thread(self, *args):
         """A callback for catching the finishing of validation process."""
         self.use_thread = False
         time.sleep(.5)
@@ -135,6 +141,9 @@ class ParserLayout(BoxLayout):
         if not errors:
             self.step_button.text = msg_template[2]
             self.console.message = msg_template[3]
+            if args:
+                app = App.get_running_app()
+                app.root.update_handle_widget()
         else:
             message = '\n'.join([msg_template[4].format(*err) for err in errors])
             self.console.message = message + '\nИсправьте ошибки.'
@@ -210,6 +219,16 @@ class Uploader(FloatLayout):
 
         self.settings_widget.grid_height = self.grid_height(self.settings_widget.grid)
 
+        if len(self.store.get('columns')['names']):
+            self.keeper['columns'] = self.store.get('columns')['names']
+            self.load_widget.console.message = 'Колонки и представления для выгрузки в файл:\n'
+            self.load_widget.console.message += '\n'.join([f'{i}. {col[0]} "{col[1]}"' for i, col in enumerate(self.keeper['columns'])])
+            self.load_widget.console.message += f'\nЕсли нужно выгрузить данные из данных колонок в файл нажмите "Шаг 4".'\
+                                                f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
+
+        self.update_handle_widget()
+
+    def update_handle_widget(self):
         save_dir_path = self.store.get('save_dir_path')['path']
         db_file_name = self.store.get('db_file_name')['name']
         if save_dir_path and db_file_name:
@@ -219,13 +238,6 @@ class Uploader(FloatLayout):
                 columns_names = list(map(lambda x: x[1], data))
                 self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
                 self.handle_widget.handler_scroll.items = columns_names[1:]
-
-        if len(self.store.get('columns')['names']):
-            self.keeper['columns'] = self.store.get('columns')['names']
-            self.load_widget.console.message = 'Колонки и представления для выгрузки в файл:\n'
-            self.load_widget.console.message += '\n'.join([f'{i}. {col[0]} "{col[1]}"' for i, col in enumerate(self.keeper['columns'])])
-            self.load_widget.console.message += f'\nЕсли нужно выгрузить данные из данных колонок в файл нажмите "Шаг 4".'\
-                                                f'\nЕсли нужно изменить колонки нажмите "Шаг 1" и выполните шаги с 1 по 3.'
 
     @staticmethod
     def grid_height(inst):
@@ -500,7 +512,7 @@ class Uploader(FloatLayout):
                             message += f'\nДанные функции отсутствуют в модуле: {", ".join(missed_function)}'
                         else:
                             self.keeper[m_name] = module
-                            self.parser_widget.step_button.text = 'Шаг 2'
+                            self.parser_widget.step_button.text = 'Шаг 4'
                 self.parser_widget.console.message = message
 
             if text == 'Шаг 2':
@@ -542,7 +554,6 @@ class Uploader(FloatLayout):
                     self.parser_widget.threads_operation(pr.parsing_category_procedure, params, messages)
 
             if text == 'Шаг 4':
-                msg = ''
                 if not sql.make_response_query(save_dir_path, db_file_name, sql.check_table('del_table')):
                     query = sql.create_table('del_table', ['id', 'article'])
                     msg = sql.make_query(save_dir_path, db_file_name, query)
@@ -566,57 +577,28 @@ class Uploader(FloatLayout):
                     self.parser_widget.console.message = msg
 
             if text == 'Шаг 5':
-                query = sql.update_data_query(tables_names)
-                update_data = sql.make_response_query(save_dir_path, db_file_name, query)
-                if not update_data:
-                    self.parser_widget.console.message = 'Нет данных для обновления.'
-                else:
-                    images_dir_path = os.path.join(save_dir_path, images_folder_name)
-                    _, cols_names = zip(*self.store.get('columns')['names'])
-                    columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
-                    if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
-                        query, _ = sql.get_delete_query('update_table')
-                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
+                if not self.parser_widget.use_thread:
+                    self.parser_widget.console.message = 'Производиться парсинг.\n'
+                    query = sql.update_data_query(tables_names)
+                    update_data = sql.make_response_query(save_dir_path, db_file_name, query)
+                    if not update_data:
+                        self.parser_widget.console.message = 'Нет данных для обновления.'
                     else:
-                        query = sql.create_table('update_table', columns_names)
-                        msg = sql.make_query(save_dir_path, db_file_name, query)
-                    update_table = []
-                    if not msg:
-                        update_dict = {pr.get_site_name(url): [] for url in urls}
-                        for row in update_data:
-                            update_dict[pr.get_site_name(row[1])].append(row)
-
-                        if ex.del_dir_files(images_dir_path):
-                            for k, v in update_dict.items():
-                                driver = pr.get_driver()
-                                for row in v:
-                                    item_url = row[3]
-                                    item_row = [row[0]]
-                                    if not driver.cookie:
-                                        self.keeper[k].accept_cookie(driver, item_url)
-                                    item_row += self.keeper[k].get_item_content(driver, item_url)
-                                    item_images = self.keeper[k].get_item_images(driver, item_url)
-                                    images_paths, file_names, values, fields_names = ex.get_image_fields(row[2], item_images)
-                                    pr.get_images(images_dir_path, images_paths, file_names)
-                                    item_row += values
-                                    if len(columns_names) - 1 == len(item_row):
-                                        update_table.append(item_row)
-                                driver.close()
-                    query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
-                    msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                    if not msg:
-                        msg = ex.get_file_from_data(save_dir_path, update_file_name,
-                                                    update_table, columns_names[1:], styles)
-                    if not msg:
-                        self.parser_widget.console.message = f'Файл {update_file_name} сохранен в папке {save_dir_path}.'
-                        self.parser_widget.step_button.text = 'Шаг 1'
-                        query = sql.get_table_info('update_table')
-                        data = sql.make_response_query(save_dir_path, db_file_name, query)
-                        columns_names = list(map(lambda x: x[1], data))
-                        self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
-                        self.handle_widget.handler_scroll.items = columns_names[1:]
-                    else:
-                        self.parser_widget.console.message = msg
+                        images_dir_path = os.path.join(save_dir_path, images_folder_name)
+                        _, cols_names = zip(*self.store.get('columns')['names'])
+                        columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
+                        params = {'save_dir_path': save_dir_path,
+                                  'db_file_name': db_file_name,
+                                  'styles': styles,
+                                  'update_file_name': update_file_name,
+                                  'images_dir_path': images_dir_path,
+                                  'columns_names': columns_names,
+                                  'urls': urls,
+                                  'update_data': update_data}
+                        for module in module_names:
+                            params[module] = self.keeper[module]
+                        messages = ['Начало парсинга.\n', 'Конец парсинга.\n']
+                        self.parser_widget.threads_operation(pr.parsing_items_procedure, params, messages)
 
     def handle_press_step(self, text):
         missing = self.check_settings(['save_dir_path', 'db_file_name'])

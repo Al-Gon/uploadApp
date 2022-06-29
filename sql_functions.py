@@ -182,7 +182,7 @@ def deleted_data_query(tables: list) -> str:
     # SELECT DISTINCT(article) FROM new_catalog WHERE article NOT IN (SELECT article FROM www_pharma_machines_com UNION SELECT article FROM www_pharma_maschinen_com)
     field = 'article'
     part_1 = f'SELECT {field} FROM {tables[1]} UNION SELECT {field} FROM {tables[2]}'
-    query = f"""SELECT DISTINCT(field) FROM ({tables[0]}) WHERE {field} NOT IN ({part_1})"""
+    query = f"""SELECT DISTINCT({field}) FROM ({tables[0]}) WHERE {field} NOT IN ({part_1})"""
     return query
 
 def get_set_values_query(table_name: str, column_name: str, data: list):

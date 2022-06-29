@@ -122,3 +122,60 @@ def parsing_category_procedure(params, transfer, set_use_thread):
             break
         transfer(('parsing_category_procedure', not bool(msg), msg, file_name, save_dir_path))
     set_use_thread()
+
+def parsing_items_procedure(params, transfer, set_use_thread):
+    save_dir_path = params['save_dir_path']
+    db_file_name = params['db_file_name']
+    styles = params['styles']
+    update_file_name = params['update_file_name']
+    images_dir_path = params['images_dir_path']
+    columns_names = params['columns_names']
+    urls = params['urls']
+    update_data = params['update_data']
+
+    if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
+        query, _ = sql.get_delete_query('update_table')
+        msg = sql.make_query_script(save_dir_path, db_file_name, query)
+    else:
+        query = sql.create_table('update_table', columns_names)
+        msg = sql.make_query(save_dir_path, db_file_name, query)
+    update_table = []
+    if not msg:
+        update_dict = {get_site_name(url): [] for url in urls}
+        for row in update_data:
+            update_dict[get_site_name(row[1])].append(row)
+
+        if ex.del_dir_files(images_dir_path):
+            for k, v in update_dict.items():
+                driver = get_driver()
+                for row in v:
+                    item_url = row[3]
+                    item_row = [row[0]]
+                    if not driver.cookie:
+                        params[k].accept_cookie(driver, item_url)
+                    item_row += params[k].get_item_content(driver, item_url)
+                    item_images = params[k].get_item_images(driver, item_url)
+                    images_paths, file_names, values, fields_names = ex.get_image_fields(row[2], item_images)
+                    get_images(images_dir_path, images_paths, file_names)
+                    item_row += values
+                    if len(columns_names) - 1 == len(item_row):
+                        update_table.append(item_row)
+                driver.close()
+    query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
+    msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
+    if not msg:
+        msg = ex.get_file_from_data(save_dir_path, update_file_name,
+                                    update_table, columns_names[1:], styles)
+
+    transfer(('parsing_item_procedure', not bool(msg), msg, update_file_name, save_dir_path))
+    set_use_thread(True)
+    # if not msg:
+    #     self.parser_widget.console.message = f'Файл {update_file_name} сохранен в папке {save_dir_path}.'
+    #     self.parser_widget.step_button.text = 'Шаг 1'
+    #     query = sql.get_table_info('update_table')
+    #     data = sql.make_response_query(save_dir_path, db_file_name, query)
+    #     columns_names = list(map(lambda x: x[1], data))
+    #     self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
+    #     self.handle_widget.handler_scroll.items = columns_names[1:]
+    # else:
+    #     self.parser_widget.console.message = msg
