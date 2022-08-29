@@ -196,11 +196,7 @@ class Uploader(FloatLayout):
             self._screen_manager.add_widget(screen)
             widgets.append(screen.main_screen.children[0])
 
-        self.settings_widget = widgets[0]
-        self.load_widget = widgets[1]
-        self.parser_widget = widgets[2]
-        self.handle_widget = widgets[3]
-        self.upload_widget = widgets[4]
+        self.settings_widget, self.load_widget, self.parser_widget, self.handle_widget, self.upload_widget = widgets
         self.store = JsonStore('settings.json')
         self.keeper = {}
         self.handle_widget.handler_scroll.keeper = self.keeper
