@@ -508,7 +508,7 @@ class Uploader(FloatLayout):
                             message += f'\nДанные функции отсутствуют в модуле: {", ".join(missed_function)}'
                         else:
                             self.keeper[m_name] = module
-                            self.parser_widget.step_button.text = 'Шаг 4'
+                            self.parser_widget.step_button.text = 'Шаг 2'
                 self.parser_widget.console.message = message
 
             if text == 'Шаг 2':

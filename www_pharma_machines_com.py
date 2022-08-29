@@ -70,8 +70,14 @@ def get_item_content(driver, item_url: str):
         td_1, td_2 = tr.find_elements(By.TAG_NAME, 'td')
         table_[td_1.text] = td_2.text
 
-    article = table_['Stock Number'].replace(' ', '')
-    pagetitle = header.text.replace(table_['Stock Number'] + ' - ', '').replace("'", '`')
+    if 'Stock Number' in table_.keys():
+        article = table_['Stock Number']
+        pagetitle = header.text.replace(table_['Stock Number'] + ' - ', '')
+    else:
+        article, pagetitle = header.text.split(' - ', 1)
+    article = article.replace(' ', '')
+    pagetitle = pagetitle.replace("'", '`')
+    
     brand, dimensions = '', ''
     if 'Manufacturer' in table_.keys():
         brand = table_['Manufacturer'].replace("'", '`')

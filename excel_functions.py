@@ -14,7 +14,7 @@ def check_file_path(file_path: str):
     return True
 
 def check_folder_path(folder_path: str) -> bool:
-    """Creates folder if it is not exists."""
+    """Creates folder if it does not exist."""
     if os.path.exists(folder_path) and os.path.isdir(folder_path):
         return True
     else:
