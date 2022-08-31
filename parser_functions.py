@@ -54,22 +54,10 @@ def get_driver():
     ua = UserAgent()
     user_agent = ua.random
     options.add_argument(f'user-agent={user_agent}')
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
     driver = Driver(chrome_options=options)
     return driver
-
-def find_element(driver, by, way: str):
-    try:
-        element = driver.find_element(by, way)
-        return element
-    except NoSuchElementException:
-        print(f'Element {way.split(" ")[-1]} not found')
-
-def find_elements(driver, by, way: str):
-    try:
-        elements = driver.find_elements(by, way)
-        return elements
-    except NoSuchElementException:
-        print(f'Elements {way.split(" ")[-1]} not found')
 
 def check_procedure(params, transfer, set_use_thread):
     driver = get_driver()
