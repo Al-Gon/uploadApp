@@ -173,6 +173,14 @@ class Uploader(FloatLayout):
         if name == 'title_font_color':
             self.set_color(self.settings_widget.title_font_color, name)
 
+    def set_current_screen(self, screen):
+        """
+        Set current screen for uploader.
+        :param screen:
+        """
+        if not self.parser_widget.use_thread:
+            self._screen_manager.current = screen
+
     def load_press_step(self, text):
         """
         Step 1 - selecting column numbers for main table in database.

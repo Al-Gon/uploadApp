@@ -19,24 +19,24 @@
             Button:
                 id : setting_button
                 text: 'Настройки'
-                on_release: _screen_manager.current = 'screen1'
+                on_release: app.root.set_current_screen('screen1')
 
             Button:
                 id : load_button
                 text: 'Загрузка'
-                on_release: _screen_manager.current = 'screen2'
+                on_release: app.root.set_current_screen('screen2')
 
             Button:
                 id : parsing_button
                 text: 'Парсинг'
-                on_release: _screen_manager.current = 'screen3'
+                on_release: app.root.set_current_screen('screen3')
 
             Button:
                 id : processing_button
                 text: 'Обработка'
-                on_release: _screen_manager.current = 'screen4'
+                on_release: app.root.set_current_screen('screen4')
 
             Button:
                 id : upload_button
                 text: 'Выгрузка'
-                on_release: _screen_manager.current = 'screen5'
+                on_release: app.root.set_current_screen('screen5')

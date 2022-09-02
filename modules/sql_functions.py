@@ -161,24 +161,18 @@ def get_data_query(table_name: str, columns: list):
     # data = make_response_query(f"""SELECT {part} FROM {table_name}""")
     return f"""SELECT {part} FROM {table_name}"""
 
-# def update_data_query(tables: list) -> str:
-#     """
-#     Returns query string for getting data for update by field 'article'
-#     :param tables: list from two tables names
-#     :return: string
-#     """
-#     field = 'article'
-#     part_1 = f'SELECT {field} FROM {tables[1]}'
-#     part_2 = f'SELECT * FROM {tables[1]} UNION SELECT * FROM {tables[2]} WHERE {field} NOT IN ({part_1}) ORDER BY {field}'
-#     part_3 = f'SELECT {field} FROM {tables[0]}'
-#     query = f"""WITH a AS ({part_2})\n SELECT * FROM a WHERE {field} NOT IN ({part_3})"""
-#     return query
-
 def update_data_query(tables: list) -> str:
-    return f"""SELECT * FROM {tables[1]} WHERE article IN('A15468E', 'A15502E') """
-
-
-
+    """
+    Returns query string for getting data for update by field 'article'
+    :param tables: list from two tables names
+    :return: string
+    """
+    field = 'article'
+    part_1 = f'SELECT {field} FROM {tables[1]}'
+    part_2 = f'SELECT * FROM {tables[1]} UNION SELECT * FROM {tables[2]} WHERE {field} NOT IN ({part_1}) ORDER BY {field}'
+    part_3 = f'SELECT {field} FROM {tables[0]}'
+    query = f"""WITH a AS ({part_2})\n SELECT * FROM a WHERE {field} NOT IN ({part_3})"""
+    return query
 
 def deleted_data_query(tables: list) -> str:
     """
