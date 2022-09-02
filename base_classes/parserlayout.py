@@ -24,7 +24,7 @@ class ParserLayout(BoxLayout):
                      'parsing_item_procedure': ('При работе над файлом {3} произошла ошибка: {2}.\n',
                                                 'Файл {3} успешно сохранен в папке {4}.\n',
                                                 'Шаг 1',
-                                                'Обработка закончена.',
+                                                'Файл {3} успешно сохранен в папке {4}.\nОбработка закончена.',
                                                 'При работе над файлом {3} произошла ошибка: {2}.\n')
                      }
 
@@ -64,8 +64,9 @@ class ParserLayout(BoxLayout):
         msg_template = self.msg_templates[self.results[-1][0]]
         errors = [res for res in self.results if not res[1]]
         if not errors:
+            result = self.results[0]
             self.step_button.text = msg_template[2]
-            self.console.message = msg_template[3]
+            self.console.message = msg_template[3].format(*result)
             if args:
                 app = App.get_running_app()
                 app.root.update_handle_widget()
