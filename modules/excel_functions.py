@@ -152,12 +152,12 @@ def check_version(version: str):
                 }
 
     version_ = ''
-    if check_file_path('settings.json'):
-        with open('settings.json') as json_file:
+    if check_file_path('../settings.json'):
+        with open('../settings.json') as json_file:
             data = json.load(json_file)
             if 'uploader' in data.keys():
                 version_ = data['uploader']['version']
 
-    if not check_file_path('settings.json') or version_ != version:
-        with open('settings.json', 'w', encoding='utf-8',) as file:
+    if not check_file_path('../settings.json') or version_ != version:
+        with open('../settings.json', 'w', encoding='utf-8', ) as file:
             file.write(json.dumps(json_str))

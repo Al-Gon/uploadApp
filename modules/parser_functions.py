@@ -1,10 +1,9 @@
 import requests
 import os
 import json
-import sql_functions as sql
-import excel_functions as ex
+from modules import sql_functions as sql
+from modules import excel_functions as ex
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 

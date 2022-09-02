@@ -1,4 +1,4 @@
-import parser_functions as pr
+from modules import parser_functions as pr
 from kivy.properties import StringProperty, NumericProperty, ObjectProperty, ListProperty
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -8,6 +8,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.core.text.text_layout import layout_text
+
 
 class TrButton(Button):
     def __init__(self, **kwargs):

@@ -1,5 +1,3 @@
-from selenium import webdriver
-import parser_functions as pr
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
