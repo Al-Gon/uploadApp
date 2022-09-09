@@ -1,19 +1,55 @@
 import sqlite3
-import os
+from base_classes.db import DB
 
-def make_response_query(db_folder_path: str, db_file: str, querystring: str):
+def make_query(db: DB, querystring: str):
     """
-    Executes a query throw executemany
-    :param: db_folder_path
-    :param: db_file
+    Executes a query throw execute
+    :param: DB instance
     :param: querystring
     """
-    db_path = os.path.join(db_folder_path, db_file)
     con = None
-    error_msg = ''
+    try:
+        con = db.get_con()
+        cursor = con.cursor()
+        cursor.execute(querystring)
+        con.commit()
+    except sqlite3.DatabaseError as err:
+        if con:
+            con.rollback()
+        db.error_msg = f'Error: {err}'
+    finally:
+        db.close_con()
+
+def make_many_query(db: DB, querystring: str, params: list):
+    """
+    Executes a query throw executemany
+    :param: DB instance
+    :param: querystring
+    :param: params list of values
+    """
+    con = None
+    try:
+        con = db.get_con()
+        cursor = con.cursor()
+        cursor.executemany(querystring, params)
+        con.commit()
+    except sqlite3.DatabaseError as err:
+        if con:
+            con.rollback()
+        db.error_msg = f'Error: {err}'
+    finally:
+        db.close_con()
+
+def make_response_query(db: DB, querystring: str):
+    """
+    Executes a query throw executemany
+    :param: DB instance
+    :param: querystring
+    """
+    con = None
     response = None
     try:
-        con = sqlite3.connect(db_path)
+        con = db.get_con()
         cursor = con.cursor()
         cursor.execute(querystring)
         response = cursor.fetchall()
@@ -21,85 +57,30 @@ def make_response_query(db_folder_path: str, db_file: str, querystring: str):
     except sqlite3.DatabaseError as err:
         if con:
             con.rollback()
-        error_msg = f'Error: {err}'
-        print(error_msg)
+        db.error_msg = f'Error: {err}'
     finally:
-        if con:
-            con.close()
+        db.close_con()
     return response
 
-def make_many_query(db_folder_path: str, db_file: str, querystring: str, params: list):
-    """
-    Executes a query throw executemany
-    :param: db_folder_path
-    :param: db_file
-    :param: querystring
-    :param: params list of values
-    """
-    db_path = os.path.join(db_folder_path, db_file)
-    con = None
-    error_msg = ''
-    try:
-        con = sqlite3.connect(db_path)
-        cursor = con.cursor()
-        cursor.executemany(querystring, params)
-        con.commit()
-    except sqlite3.DatabaseError as err:
-        if con:
-            con.rollback()
-        error_msg = f'Error: {err}'
-    finally:
-        if con:
-            con.close()
-    return error_msg
 
-def make_query(db_folder_path: str, db_file: str, querystring: str):
-    """
-    Executes a query throw execute
-    :param: db_folder_path
-    :param: db_file
-    :param: querystring
-    """
-    db_path = os.path.join(db_folder_path, db_file)
-    con = None
-    error_msg = ''
-    try:
-        con = sqlite3.connect(db_path)
-        cursor = con.cursor()
-        cursor.execute(querystring)
-        con.commit()
-    except sqlite3.DatabaseError as err:
-        if con:
-            con.rollback()
-        error_msg = f'Error: {err}'
-    finally:
-        if con:
-            con.close()
-    return error_msg
-
-def make_query_script(db_folder_path: str, db_file: str, querystring: str):
+def make_query_script(db: DB, querystring: str):
     """
     Executes a query script throw executescript
-    :param: db_folder_path
-    :param: db_file
+    :param: DB instance
     :param: querystring
     """
-    db_path = os.path.join(db_folder_path, db_file)
     con = None
-    error_msg = ''
     try:
-        con = sqlite3.connect(db_path)
+        con = db.get_con()
         cursor = con.cursor()
         cursor.executescript(querystring)
         con.commit()
     except sqlite3.DatabaseError as err:
         if con:
             con.rollback()
-        error_msg = f'Error: {err}'
+        db.error_msg = f'Error: {err}'
     finally:
-        if con:
-            con.close()
-    return error_msg
+        db.close_con()
 
 def create_table(table_name: str, columns_names: list) -> str:
     """
@@ -132,6 +113,9 @@ def get_delete_query(table_name: str, columns_names=None, data=None) -> tuple:
 
 def check_table(table_name: str) -> str:
     return f"""SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"""
+
+def check_tables():
+    return """SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('sqlite_sequence');"""
 
 def get_insert_query(table_name: str, columns_names: list, data: list) -> tuple:
     """
@@ -205,3 +189,11 @@ def get_table_info(table_name: str):
     :return: string
     """
     return f"""PRAGMA table_info({table_name})"""
+
+def get_columns_names(table_name: str):
+    """
+    Returns table info query string
+    :param: table_name
+    :return: string
+    """
+    return f"""SELECT name FROM PRAGMA_TABLE_INFO('{table_name}');"""

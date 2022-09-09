@@ -7,6 +7,7 @@ from base_classes.parserlayout import ParserLayout
 from base_classes.colorspanel import ColorsPanel
 from kivy.storage.jsonstore import JsonStore
 from kivy.lang import Builder
+from base_classes.db import DB
 
 Builder.load_file('base_classes/kv/uploader.kv')
 
@@ -58,12 +59,11 @@ class Uploader(FloatLayout):
         save_dir_path = self.store.get('save_dir_path')['path']
         db_file_name = self.store.get('db_file_name')['name']
         if save_dir_path and db_file_name:
-            if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
-                query = sql.get_table_info('update_table')
-                data = sql.make_response_query(save_dir_path, db_file_name, query)
-                columns_names = list(map(lambda x: x[1], data))
+            db = DB(os.path.join(save_dir_path, db_file_name))
+            if 'update_table' in db.tables.keys():
+                print(db)
                 self.handle_widget.message = 'Выберите колонку для редактирования и нажмите кнопку "Шаг 1":'
-                self.handle_widget.handler_scroll.items = columns_names[1:]
+                self.handle_widget.handler_scroll.items = db.tables['update_table'][1:]
 
     @staticmethod
     def grid_height(inst):
@@ -153,7 +153,6 @@ class Uploader(FloatLayout):
                 self.store.put('category_site_urls', urls=urls)
                 message = ' ,\n'.join(urls)
                 self.settings_widget.console.message = f'Данные url: "{message}" сохранены в настройках.'
-                self.parser_widget.choose_url.items = urls
             else:
                 self.settings_widget.console.message = 'Ни одного url не было сохранено.'
                 self.settings_widget.category_site_urls.input.text = 'Введите url адреса страниц категорий сайтов (через запятую).'
@@ -203,11 +202,9 @@ class Uploader(FloatLayout):
             title_fill_color = self.store.get('title_fill_color')['color']
             title_font_color = self.store.get('title_font_color')['color']
             styles = [title_fill_color, title_font_color]
-
+            db = DB(os.path.join(save_dir_path, db_file_name))
             if text == 'Шаг 1':
-                query = sql.get_table_info('catalog')
-                data = sql.make_response_query(save_dir_path, db_file_name, query)
-                self.keeper['columns'] = list(map(lambda x: x[1], data))
+                self.keeper['columns'] = db.tables['Catalog']
                 self.load_widget.console.message = 'В таблице определены следующие поля:\n'
                 self.load_widget.console.message += '\n'.join([f'{i + 1}. {col}' for i, col in enumerate(self.keeper['columns'][1:])])
                 self.load_widget.input.text = f'Введите номера выбранных полей таблицы через запятую.' \
@@ -258,27 +255,26 @@ class Uploader(FloatLayout):
                     self.load_widget.input.text = 'Количество выбранных имён не соответствует числу колонок. Попробуйте ещё раз.'
 
             elif text == 'Шаг 4':
+                msg = db.error_msg
                 if self.store.get('columns')['names']:
                     self.keeper['columns'] = self.store.get('columns')['names']
                     table_name = 'Catalog'
                     query = sql.get_data_query(table_name, self.keeper['columns'])
-                    data = sql.make_response_query(save_dir_path, db_file_name, query)
+                    data = sql.make_response_query(db, query)
                     new_table_name = 'new_catalog'
                     _, columns_names = zip(*self.keeper['columns'])
-                    if sql.make_response_query(save_dir_path, db_file_name, sql.check_table(new_table_name)):
+                    if new_table_name in db.tables.keys():
                         query, _ = sql.get_delete_query(new_table_name)
-                        msg = sql.make_query_script(save_dir_path, db_file_name, query)
+                        sql.make_query_script(db, query)
                     else:
-                        query = sql.create_table(new_table_name, columns_names)
-                        msg = sql.make_query(save_dir_path, db_file_name, query)
-                    if not msg:
+                        db.create_table(new_table_name, columns_names)
+                    if msg is None:
                         query, data = sql.get_insert_query(new_table_name, columns_names, data)
-                        msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                    if not msg:
+                        sql.make_many_query(db, query, data)
+                    if msg is None:
                         msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
                     if not msg:
                         msg = f'Файл {file_name} сохранен в папке {save_dir_path}.'
-                    msg = msg
                     self.load_widget.console.message += f'\n{msg}'
                 else:
                     self.console.message = f'Нет наименований колонок таблицы для выгрузки.' \
@@ -325,6 +321,7 @@ class Uploader(FloatLayout):
             title_fill_color = self.store.get('title_fill_color')['color']
             title_font_color = self.store.get('title_font_color')['color']
             styles = [title_fill_color, title_font_color]
+            db = DB(os.path.join(save_dir_path, db_file_name))
             if text == 'Шаг 1':
                 function_names = self.store.get('functions_names')['names']
                 message = ''
@@ -371,10 +368,10 @@ class Uploader(FloatLayout):
                 if not self.parser_widget.use_thread:
                     self.parser_widget.console.message = 'Производиться парсинг.\n'
                     params = {'save_dir_path': save_dir_path,
-                              'db_file_name': db_file_name,
                               'columns_names': columns_names,
                               'styles': styles,
-                              'urls': {}
+                              'urls': {},
+                              'db': db
                               }
                     for i, m_name in enumerate(module_names):
                         table_name = f'{m_name}'
@@ -388,25 +385,25 @@ class Uploader(FloatLayout):
                     self.parser_widget.threads_operation(pr.parsing_category_procedure, params, messages)
 
             if text == 'Шаг 4':
-                if not sql.make_response_query(save_dir_path, db_file_name, sql.check_table('del_table')):
-                    query = sql.create_table('del_table', ['id', 'article'])
-                    msg = sql.make_query(save_dir_path, db_file_name, query)
+                if 'del_table' not in db.tables.keys():
+                    db.create_table('del_table', ['id', 'article'])
                 else:
                     query, _ = sql.get_delete_query('del_table')
-                    msg = sql.make_query_script(save_dir_path, db_file_name, query)
-                if not msg:
+                    sql.make_query_script(db, query)
+                msg = db.error_msg
+                if msg is None:
                     deleted_query = sql.deleted_data_query(tables_names)
-                    deleted_data = sql.make_response_query(save_dir_path, db_file_name, deleted_query)
+                    deleted_data = sql.make_response_query(db, deleted_query)
                     deleted_data = list(map(lambda x: [x[0]], deleted_data))
                     if deleted_data:
                         query, deleted_data = sql.get_insert_query('del_table', ['article'], deleted_data)
-                        msg = sql.make_many_query(save_dir_path, db_file_name, query, deleted_data)
-                        if not msg:
+                        sql.make_many_query(db, query, deleted_data)
+                        if msg is None:
                             msg = ex.get_file_from_data(save_dir_path, del_file_name,
                                                         deleted_data, ['article'], styles)
-                if not msg:
-                    self.parser_widget.console.message = f'Файл {del_file_name} сохранен в папке {save_dir_path}.\n'
-                    self.parser_widget.step_button.text = 'Шаг 5'
+                        if not msg:
+                            self.parser_widget.console.message = f'Файл {del_file_name} сохранен в папке {save_dir_path}.\n'
+                            self.parser_widget.step_button.text = 'Шаг 5'
                 else:
                     self.parser_widget.console.message = msg
 
@@ -414,7 +411,7 @@ class Uploader(FloatLayout):
                 if not self.parser_widget.use_thread:
                     self.parser_widget.console.message = 'Производиться парсинг.\n'
                     query = sql.update_data_query(tables_names)
-                    update_data = sql.make_response_query(save_dir_path, db_file_name, query)
+                    update_data = sql.make_response_query(db, query)
                     if not update_data:
                         self.parser_widget.console.message = 'Нет данных для обновления.'
                     else:
@@ -422,13 +419,13 @@ class Uploader(FloatLayout):
                         _, cols_names = zip(*self.store.get('columns')['names'])
                         columns_names = list(cols_names) + ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
                         params = {'save_dir_path': save_dir_path,
-                                  'db_file_name': db_file_name,
                                   'styles': styles,
                                   'update_file_name': update_file_name,
                                   'images_dir_path': images_dir_path,
                                   'columns_names': columns_names,
                                   'urls': urls,
-                                  'update_data': update_data}
+                                  'update_data': update_data,
+                                  'db': db}
                         for module in module_names:
                             params[module] = self.keeper[module]
                         messages = ['Начало парсинга.\n', 'Конец парсинга.\n']
@@ -441,6 +438,7 @@ class Uploader(FloatLayout):
         else:
             save_dir_path = self.store.get('save_dir_path')['path']
             db_file_name = self.store.get('db_file_name')['name']
+            db = DB(os.path.join(save_dir_path, db_file_name))
             if text == 'Шаг 1':
                 column_name = self.handle_widget.handler_scroll.value
                 if column_name:
@@ -454,7 +452,7 @@ class Uploader(FloatLayout):
                 self.handle_widget.handler_scroll.items = []
                 column_name = self.keeper['temporary_column_name']
                 query = sql.get_data_query('update_table', ['ID', column_name])
-                columns_values = sql.make_response_query(save_dir_path, db_file_name, query)
+                columns_values = sql.make_response_query(db, query)
                 self.handle_widget.message = f'В колонке {column_name} содержится {len(columns_values)} значений.\n' \
                                              f'После редактирования ячейки сохраните её значения.\n' \
                                              f'Для сохранения колонки в таблицу нажмите кнопку "Шаг 3"'
@@ -471,11 +469,12 @@ class Uploader(FloatLayout):
                 column = self.keeper['temporary_column']
                 values = list(map(lambda item: (item[1][0] if not item[1][1] else item[1][1], item[0]), column.items()))
                 query, data = sql.get_set_values_query('update_table', column_name, values)
-                msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                if not msg:
+                sql.make_many_query(db, query, data)
+                msg = db.error_msg
+                if msg is None:
                     self.handle_widget.handler_scroll.remove_edit_blocks()
                     query = sql.get_table_info('update_table')
-                    data = sql.make_response_query(save_dir_path, db_file_name, query)
+                    data = sql.make_response_query(db, query)
                     columns_names = list(map(lambda x: x[1], data))
                     self.handle_widget.message = 'Данные сохранены.\n' \
                                                  'Выберите колонку для редактирования и нажмите "Получить значения".'
@@ -491,25 +490,28 @@ class Uploader(FloatLayout):
         else:
             save_dir_path = self.store.get('save_dir_path')['path']
             db_file_name = self.store.get('db_file_name')['name']
+            db = DB(os.path.join(save_dir_path, db_file_name))
             data = []
             img_fields_names = ['image'] + [f'image_{str(i)}' for i in range(1, 13)]
             columns = self.store.get('columns')['names']
             img_columns = [list(el) for el in zip(img_fields_names, img_fields_names)]
             columns += img_columns
-            if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
+            if 'update_table' in db.tables.keys():
                 query = sql.get_data_query('update_table', [el[::-1] for el in columns])
-                data = sql.make_response_query(save_dir_path, db_file_name, query)
-            if not data:
-                self.upload_widget.console.message = f'Нет данных для загрузки.\n' \
-                                                     f'Перейдите к операции "Обработка"'
-            else:
-                catalog_columns, _ = zip(*columns)
-                query, data = sql.get_insert_query('catalog', catalog_columns, data)
-                msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                if not msg:
-                    self.upload_widget.console.message = f'Было успешно добавленно {len(data)} записей.'
+                data = sql.make_response_query(db, query)
+            msg = db.error_msg
+            if msg is None:
+                if not data:
+                    self.upload_widget.console.message = f'Нет данных для загрузки.\n' \
+                                                         f'Перейдите к операции "Обработка"'
                 else:
-                    self.upload_widget.console.message = f'Произошли следующие ошибки:\n{msg}'
+                    catalog_columns, _ = zip(*columns)
+                    query, data = sql.get_insert_query('catalog', catalog_columns, data)
+                    sql.make_many_query(db, query, data)
+            if msg is None:
+                self.upload_widget.console.message = f'Было успешно добавленно {len(data)} записей.'
+            else:
+                self.upload_widget.console.message = f'Произошли следующие ошибки:\n{msg}'
 
     def delete_step(self):
         missing = self.check_settings(['save_dir_path', 'db_file_name'])
@@ -518,18 +520,21 @@ class Uploader(FloatLayout):
         else:
             save_dir_path = self.store.get('save_dir_path')['path']
             db_file_name = self.store.get('db_file_name')['name']
+            db = DB(os.path.join(save_dir_path, db_file_name))
             data = []
-            if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('del_table')):
+            if 'del_table' in db.tables.keys():
                 query = sql.get_data_query('del_table', ['article'])
-                data = sql.make_response_query(save_dir_path, db_file_name, query)
-            if not data:
-                self.upload_widget.console.message = f'Нет данных для удаления.\n' \
-                                                  f'Перейдите к операции "Парсинг"'
-            else:
-                query, data = sql.get_delete_query('catalog', ['article'], data)
-                msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-                if not msg:
-                    self.upload_widget.console.message = f'Было успешно удалено {len(data)} записей.'
+                data = sql.make_response_query(db, query)
+            msg = db.error_msg
+            if msg is None:
+                if not data:
+                    self.upload_widget.console.message = f'Нет данных для удаления.\n' \
+                                                      f'Перейдите к операции "Парсинг"'
                 else:
-                    self.upload_widget.console.message = 'Произошли следующие ошибки:'
-                    self.upload_widget.console.message += '\n'.join(msg)
+                    query, data = sql.get_delete_query('catalog', ['article'], data)
+                    sql.make_many_query(db, query, data)
+            if not msg:
+                self.upload_widget.console.message = f'Было успешно удалено {len(data)} записей.'
+            else:
+                self.upload_widget.console.message = 'Произошли следующие ошибки:'
+                self.upload_widget.console.message += '\n'.join(msg)

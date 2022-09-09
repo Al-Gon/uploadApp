@@ -76,18 +76,18 @@ def check_procedure(params, transfer, set_use_thread):
 
 def parsing_category_procedure(params, transfer, set_use_thread):
     save_dir_path = params['save_dir_path']
-    db_file_name = params['db_file_name']
     columns_names = params['columns_names']
     styles = params['styles']
+    db = params['db']
 
     for url, value in params['urls'].items():
+        msg = db.error_msg
         table_name, file_name, get_categories, accept_cookie, get_products = value
-        query = sql.create_table(table_name, columns_names)
-        msg = sql.make_query(save_dir_path, db_file_name, query)
-        if not msg:
+        db.create_table(table_name, columns_names)
+        if msg is None:
             query, _ = sql.get_delete_query(table_name)
-            msg = sql.make_query_script(save_dir_path, db_file_name, query)
-        if not msg:
+            sql.make_query_script(db, query)
+        if msg is None:
             driver = get_driver()
             categories = get_categories(driver, url)
             data = []
@@ -99,35 +99,36 @@ def parsing_category_procedure(params, transfer, set_use_thread):
                 data += [start + list(row) for row in rows]
             driver.close()
             query, data = sql.get_insert_query(table_name, columns_names, data)
-            msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-        if not msg:
+            sql.make_many_query(db, query, data)
+        if msg is None:
             columns = list(zip(columns_names, columns_names))
             query = sql.get_data_query(table_name, columns)
-            data = sql.make_response_query(save_dir_path, db_file_name, query)
+            data = sql.make_response_query(db, query)
             msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
-        if msg:
+        else:
             break
         transfer(('parsing_category_procedure', not bool(msg), msg, file_name, save_dir_path))
     set_use_thread()
 
 def parsing_items_procedure(params, transfer, set_use_thread):
     save_dir_path = params['save_dir_path']
-    db_file_name = params['db_file_name']
     styles = params['styles']
     update_file_name = params['update_file_name']
     images_dir_path = params['images_dir_path']
     columns_names = params['columns_names']
     urls = params['urls']
     update_data = params['update_data']
+    db = params['db']
 
-    if sql.make_response_query(save_dir_path, db_file_name, sql.check_table('update_table')):
+    msg = db.error_msg
+    if 'update_table' in db.tables.keys():
         query, _ = sql.get_delete_query('update_table')
-        msg = sql.make_query_script(save_dir_path, db_file_name, query)
+        sql.make_query_script(db, query)
     else:
-        query = sql.create_table('update_table', columns_names)
-        msg = sql.make_query(save_dir_path, db_file_name, query)
+        db.create_table('update_table', columns_names)
+
     update_table = []
-    if not msg:
+    if msg is None:
         update_dict = {get_site_name(url): [] for url in urls}
         for row in update_data:
             update_dict[get_site_name(row[1])].append(row)
@@ -149,8 +150,8 @@ def parsing_items_procedure(params, transfer, set_use_thread):
                         update_table.append(item_row)
                 driver.close()
     query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
-    msg = sql.make_many_query(save_dir_path, db_file_name, query, data)
-    if not msg:
+    msg = sql.make_many_query(db, query, data)
+    if msg is None:
         msg = ex.get_file_from_data(save_dir_path, update_file_name,
                                     update_table, columns_names[1:], styles)
 

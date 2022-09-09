@@ -144,7 +144,7 @@ def check_version(version: str):
                 "columns": {"names": []},
                 "category_site_file_name": {"name": ""},
                 "data_site_file_name": {"name": ""},
-                "category_site_urls": {"urls": {}},
+                "category_site_urls": {"urls": []},
                 "functions_names": {"names": ["get_categories",
                                               "get_products",
                                               "get_item_content",
