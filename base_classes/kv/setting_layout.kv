@@ -51,64 +51,75 @@
                     text_label: 'Путь к папке для хранения файлов:'
                     input_string: 'Введите путь к папке для хранения файлов.'
                     button_name: 'save_dir_path_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: db_file_name
                     text_label: 'Имя файла базы данных:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.db").'
                     button_name: 'db_file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: file_name
                     text_label: 'Имя файла для выгрузки таблицы:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: images_folder_name
                     text_label: 'Имя папки с фото:'
                     input_string: 'Введите имя папки с фото'
                     button_name: 'images_folder_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: update_file_name
                     text_label: 'Имя файла для загрузки данных в базу:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'update_file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: del_file_name
                     text_label: 'Имя файла для удаления данных из базы:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_месяц_дата.xlsx").'
                     button_name: 'del_file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: category_site_file_name
                     text_label: 'Имя файла для категорий данных сайта:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_сайт_месяц_дата.xlsx").'
                     button_name: 'category_site_file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 InputBlock:
                     id: data_site_file_name
                     text_label: 'Имя файла для данных сайта:'
                     input_string: 'Введите имя файла (будет преобразованно к "имя_сайт_месяц_дата.xlsx").'
                     button_name: 'data_site_file_name_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
                 ChooseColorBlock:
                     id: title_fill_color
                     text_label: 'Цвет заливки "шапки" таблицы:'
                     button_name: 'title_fill_color'
+                    on_panels: root.set_height()
 
                 ChooseColorBlock:
                     id: title_font_color
                     text_label: 'Цвет шрифта "шапки" таблицы:'
                     button_name: 'title_font_color'
+                    on_panels: root.set_height()
 
                 InputBlock:
                     id: category_site_urls
                     text_label: 'Полные url-адреса страниц категорий сайтов:'
                     input_string: 'Введите url адреса страниц категорий сайтов (через запятую).'
                     button_name: 'category_site_urls_button'
+                    on_console_message: root.repr_console_massage(self.console_message)
 
     AnchorLayout:
         #pos_hint: {'x':0, 'y':0}

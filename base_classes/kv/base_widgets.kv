@@ -48,7 +48,6 @@
 <CheckSaveButton@Button>
     size_hint: .3, .3
     pos_hint: {'x':.68, 'y':.1}
-    #text: 'Проверить/Сохранить'
 
 <InputBlock>
     padding: [5, 5, 5, 5]
@@ -70,7 +69,7 @@
     CheckSaveButton:
         name: root.button_name
         text: root.button_text
-        on_release: app.root.handle_path(self.name)
+        on_release: root.handle_path(self.name)
 
 <ChooseColorBlock>
     cols: 1
@@ -108,7 +107,7 @@
         CheckSaveButton:
             name: root.button_name
             text: root.button_text
-            on_release: app.root.get_color(self.name)
+            on_release: root.handle_color(self.name)
 
 <ScreenTemplate>
     main_screen: main_screen

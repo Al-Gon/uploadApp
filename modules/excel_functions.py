@@ -2,7 +2,6 @@ import openpyxl
 import datetime
 import os
 import re
-import json
 from openpyxl.styles import Font, PatternFill, Side, Border, Alignment
 
 def check_file_path(file_path: str):
@@ -130,34 +129,12 @@ def get_image_fields(alias: str, images_paths: list) -> tuple:
     fields_names = ['image'] + [f'image_{str(i)}' for i in range(1, num)]
     return images_paths, file_names, values, fields_names
 
-def check_version(version: str):
-    json_str = {
-                "uploader": {"version": version},
-                "save_dir_path": {"path": ""},
-                "db_file_name": {"name": ""},
-                "file_name": {"name": ""},
-                "images_folder_name": {"name": ""},
-                "title_fill_color": {"color": ""},
-                "title_font_color": {"color": ""},
-                "update_file_name": {"name": ""},
-                "del_file_name": {"name": ""},
-                "columns": {"names": []},
-                "category_site_file_name": {"name": ""},
-                "data_site_file_name": {"name": ""},
-                "category_site_urls": {"urls": []},
-                "functions_names": {"names": ["get_categories",
-                                              "get_products",
-                                              "get_item_content",
-                                              "get_item_images"]}
-                }
+def check_values(dict_, list_: list):
+    return [el for el in list_ if not dict_[el]]
 
-    version_ = ''
-    if check_file_path('../settings.json'):
-        with open('../settings.json') as json_file:
-            data = json.load(json_file)
-            if 'uploader' in data.keys():
-                version_ = data['uploader']['version']
-
-    if not check_file_path('../settings.json') or version_ != version:
-        with open('../settings.json', 'w', encoding='utf-8', ) as file:
-            file.write(json.dumps(json_str))
+def get_report(missing: list):
+    report = 'Отсутствуют следующие настройки для выполнения операции:\n'
+    report += '\n'.join([f'{i + 1}. {s}' for i, s in enumerate(missing)])
+    report += f'\nПерейдите к настройкам, заполните необходимые поля,' \
+              f'\nсохраните их и вернитесь к выполнению операции.'
+    return report

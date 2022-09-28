@@ -2,7 +2,7 @@ import sqlite3
 import modules.sql_functions as sql
 from base_classes.singleton import Singleton
 
-class DB(metaclass=Singleton):
+class DB(Singleton):
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.con = None

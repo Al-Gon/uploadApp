@@ -4,7 +4,6 @@
     orientation: 'vertical'
     size_hint: .95, .975
     pos_hint: {'x':.025, 'y':.025}
-    message: 'Консоль'
     scroll: scroll
     #choose_value: choose_value
     step_button: step_button
@@ -57,4 +56,4 @@
                 id: step_button
                 size_hint: .3, 1
                 text: 'Шаг 1'
-                on_release: app.root.handle_press_step(self.text)
+                on_release: root.handle_press_step(self.text)
