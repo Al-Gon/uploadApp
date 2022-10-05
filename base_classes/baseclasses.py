@@ -6,7 +6,7 @@ from kivy.properties import StringProperty
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.lang import Builder
 from base_classes.config import Config
-from modules import excel_functions as ex, parser_functions as pr
+from modules import excel_functions as ex, parser_functions as pr, request_functions as rq
 
 Builder.load_file('base_classes/kv/base_widgets.kv')
 
@@ -64,6 +64,15 @@ class InputBlock(FloatLayout):
 
         if name == 'file_name_button':
             self.save_file_name(self.input, 'file_name', '.xlsx')
+
+        if name == 'php_file_path_button':
+            php_file_path = self.input.text.strip()
+            if rq.check_url(php_file_path):
+                self.conf.put('php_file_path', php_file_path)
+                self.console_message = 'URL адрес PHP файла успешно сохранён в настройках.'
+            else:
+                self.input.text = 'Введите путь к папке с фото'
+                self.console_message = 'URL адрес PHP файла указан не верно либо он отсутствует.'
 
         if name == 'images_folder_name_button':
             images_folder_name = self.input.text.strip()

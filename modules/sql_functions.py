@@ -93,6 +93,13 @@ def create_table(table_name: str, columns_names: list) -> str:
     query = f"""CREATE TABLE IF NOT EXISTS {table_name}({columns})"""
     return query
 
+def delete_table(table_name: str) -> str:
+    """
+        Returns a string of query
+        :param table_name: str
+    """
+    return f"""DROP TABLE IF EXISTS {table_name}"""
+
 def get_delete_query(table_name: str, columns_names=None, data=None) -> tuple:
     """
     Returns a tuple: query string and list of data rows.
@@ -166,8 +173,9 @@ def deleted_data_query(tables: list) -> str:
     """
     # SELECT DISTINCT(article) FROM new_catalog WHERE article NOT IN (SELECT article FROM www_pharma_machines_com UNION SELECT article FROM www_pharma_maschinen_com)
     field = 'article'
+    fields = 'migxID, article'
     part_1 = f'SELECT {field} FROM {tables[1]} UNION SELECT {field} FROM {tables[2]}'
-    query = f"""SELECT DISTINCT({field}) FROM ({tables[0]}) WHERE {field} NOT IN ({part_1})"""
+    query = f"""SELECT {fields} FROM ({tables[0]}) WHERE {field} NOT IN ({part_1})"""
     return query
 
 def get_set_values_query(table_name: str, column_name: str, data: list):

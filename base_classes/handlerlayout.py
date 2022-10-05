@@ -60,9 +60,9 @@ class HandleLayout(BoxLayout):
                 self.keeper['temporary_column'] = {}
                 for _id, value in columns_values:
                     self.keeper['temporary_column'][_id] = ([value, ''])
-                    self.handler_scroll.add_edit_block(_id, value)
+                    self.handler_scroll.add_edit_block(column_name, _id, value)
                     # print("   ", self.handle_widget.choose_value.height)
-
+                print(self.keeper['temporary_column'])
                 self.step_button.text = 'Шаг 3'
 
             if text == 'Шаг 3':
@@ -79,7 +79,7 @@ class HandleLayout(BoxLayout):
                     columns_names = list(map(lambda x: x[1], data))
                     self.message = 'Данные сохранены.\n' \
                                    'Выберите колонку для редактирования и нажмите "Получить значения".'
-                    self.handler_scroll.items = columns_names
+                    self.handler_scroll.items = columns_names[1:]
                     self.step_button.text = 'Шаг 1'
                 else:
                     print(msg)

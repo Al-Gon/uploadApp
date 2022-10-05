@@ -9,6 +9,7 @@ class Config(Singleton, UserDict):
         "save_dir_path": "",
         "db_file_name": "",
         "file_name": "",
+        "php_file_path": "",
         "images_folder_name": "",
         "title_fill_color": "",
         "title_font_color": "",
@@ -21,7 +22,10 @@ class Config(Singleton, UserDict):
         "functions_names": ["get_categories",
                             "get_products",
                             "get_item_content",
-                            "get_item_images"]
+                            "get_item_images"],
+        "table_name": "catalog_content",
+        "inner_id": ["Id", "id"],
+        "outer_id": ["id", "migxID"]
     }
 
     def __init__(self, **kwargs):

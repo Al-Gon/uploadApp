@@ -96,14 +96,14 @@ class HandlerScroll(GridLayout):
             self.keeper['temporary_column'][_id][1] = text
         print(self.keeper)
 
-    def add_edit_block(self, _id: int, value: str):
+    def add_edit_block(self, column_name: str, _id: int, value: str):
         edit_block = EditBlock()
         self.edit_blocks.append(edit_block)
         self.add_widget(edit_block)
 
         label_title = ClearLabel(padding=(30, 10))
         edit_block.add_widget(label_title)
-        label_title.text = f'[size=17sp]Значение поля "id" ряда [b]{_id}[/b][/size]'
+        label_title.text = f'[size=17sp]"Ряд [b]{_id}[/b], редактируемое поле [b]{column_name}[/b][/size]'
         ht = self.count_text_h(label_title)
 
         label_0 = ClearLabel(padding=(40, 10))

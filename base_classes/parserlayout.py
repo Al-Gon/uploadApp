@@ -216,7 +216,7 @@ class ParserLayout(BoxLayout):
 
             if text == 'Шаг 4':
                 if 'del_table' not in db.tables.keys():
-                    db.create_table('del_table', ['id', 'article'])
+                    db.create_table('del_table', ['id', 'migxID', 'article'])
                 else:
                     query, _ = sql.get_delete_query('del_table')
                     sql.make_query_script(db, query)
@@ -224,13 +224,13 @@ class ParserLayout(BoxLayout):
                 if msg is None:
                     deleted_query = sql.deleted_data_query(tables_names)
                     deleted_data = sql.make_response_query(db, deleted_query)
-                    deleted_data = list(map(lambda x: [x[0]], deleted_data))
+                    # deleted_data = list(map(lambda x: [x[0]], deleted_data))
                     if deleted_data:
-                        query, deleted_data = sql.get_insert_query('del_table', ['article'], deleted_data)
+                        query, deleted_data = sql.get_insert_query('del_table', ['migxID', 'article'], deleted_data)
                         sql.make_many_query(db, query, deleted_data)
                         if msg is None:
                             msg = ex.get_file_from_data(save_dir_path, del_file_name,
-                                                        deleted_data, ['article'], styles)
+                                                        deleted_data, ['migxID', 'article'], styles)
                         if not msg:
                             self.console.message = f'Файл {del_file_name} сохранен в папке {save_dir_path}.\n'
                             self.step_button.text = 'Шаг 5'
