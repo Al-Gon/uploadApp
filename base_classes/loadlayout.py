@@ -109,20 +109,24 @@ class LoadLayout(BoxLayout):
                     catalog_columns_names, columns_names = zip(*self.keeper['columns'])
                     data_ = {'table_name': table_name,
                              'get_catalog': ','.join(catalog_columns_names)}
-                    data = rq.get_response(php_file_path, data_, 'json')
-                    new_table_name = 'new_catalog'
-                    columns_names_ = [inner_id[1]] + list(columns_names)
-                    if new_table_name in db.tables.keys():
-                        query = sql.delete_table(new_table_name)
-                        sql.make_query(db, query)
-                    db.create_table(new_table_name, columns_names_)
-                    if msg is None:
-                        query, data = sql.get_insert_query(new_table_name, columns_names, data)
-                        sql.make_many_query(db, query, data)
-                    if msg is None:
-                        msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
-                    if not msg:
-                        msg = f'Файл {file_name} сохранен в папке {save_dir_path}.'
-                    self.console.message += f'\n{msg}'
+                    response = rq.do_request(url=php_file_path, userdata=data_)
+                    if response is not None and response.ok:
+                        data = response.json()
+                        new_table_name = 'new_catalog'
+                        columns_names_ = [inner_id[1]] + list(columns_names)
+                        if new_table_name in db.tables.keys():
+                            query = sql.delete_table(new_table_name)
+                            sql.make_query(db, query)
+                        db.create_table(new_table_name, columns_names_)
+                        if msg is None:
+                            query, data = sql.get_insert_query(new_table_name, columns_names, data)
+                            sql.make_many_query(db, query, data)
+                        if msg is None:
+                            msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
+                        if not msg:
+                            msg = f'Файл {file_name} сохранен в папке {save_dir_path}.'
+                        self.console.message += f'\n{msg}'
+                    else:
+                        self.console.message += 'Ошибка запроса к базе данных на сайте.'
                 else:
                     self.console.message = f'Нет наименований колонок таблицы для выгрузки.\nВыполните шаги с 1 по 3.'

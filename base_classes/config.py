@@ -44,7 +44,6 @@ class Config(Singleton, UserDict):
             self.save_data()
 
     def put(self, key, value):
-        print(key)
         if key not in self.content.keys():
             raise ValueError(f'Не верный ключ словаря {key}.')
         elif not isinstance(value, type(self.content[key])):

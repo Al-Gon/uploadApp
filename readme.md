@@ -1,1 +1,2 @@
 Консольное приложение для парсинга каталогов оборудования с сайтов с целью редактирования и последующей загрузки на свой сайт. 
+A console application for parsing hardware catalogs from websites for editing and then uploading to your site.

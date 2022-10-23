@@ -67,7 +67,8 @@ class InputBlock(FloatLayout):
 
         if name == 'php_file_path_button':
             php_file_path = self.input.text.strip()
-            if rq.check_url(php_file_path):
+            response = rq.do_request(url=php_file_path)
+            if response is not None and response.ok:
                 self.conf.put('php_file_path', php_file_path)
                 self.console_message = 'URL адрес PHP файла успешно сохранён в настройках.'
             else:
@@ -99,7 +100,7 @@ class InputBlock(FloatLayout):
 
         if name == 'category_site_urls_button':
             urls_ = self.input.text.split(',')
-            urls = [url.strip() for url in urls_ if pr.check_url(url.strip())]
+            urls = [url.strip() for url in urls_ if rq.do_request(url=url.strip()).ok]
             if urls:
                 self.conf.put('category_site_urls', urls)
                 message = ' ,\n'.join(urls)

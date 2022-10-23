@@ -3,6 +3,7 @@ import os
 import json
 from modules import sql_functions as sql
 from modules import excel_functions as ex
+from modules import request_functions as rq
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
@@ -23,26 +24,12 @@ def get_translation(text: str):
     data = json.loads(response.text)
     return data['responseData']['translatedText']
 
-def check_url(url: str):
-    try:
-        response = requests.get(url)
-    except(requests.RequestException, ValueError):
-        return False
-    else:
-        return response.ok
-
 def get_images(folder_path: str, images_paths: list, file_names: list):
-    ua = UserAgent()
     for i, path in enumerate(images_paths):
-        user_agent = ua.random
-        headers = {'user-agent': user_agent}
-        if path:
-            try:
-                response = requests.get(path, headers=headers)
-                with open(os.path.join(folder_path, file_names[i]), 'wb') as f:
-                    f.write(response.content)
-            except(requests.RequestException, ValueError):
-                print('ValueError')
+        response = rq.do_request(url=path)
+        if response is not None and response.ok:
+            with open(os.path.join(folder_path, file_names[i]), 'wb') as f:
+                f.write(response.content)
 
 def get_site_name(url: str) -> str:
     """Returns the name of the site from url without points"""
