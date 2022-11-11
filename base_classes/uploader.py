@@ -38,8 +38,10 @@ class Uploader(FloatLayout):
 
     def set_current_screen(self, screen):
         """
-        Set current screen for uploader.
+        Used for switches screens buttons.
+        Sets current screen.
         :param screen:
         """
-        if not self.parser_widget.use_thread:
+        use_threads = [self.load_widget.use_thread, self.parser_widget.use_thread]
+        if not any(use_threads):
             self._screen_manager.current = screen

@@ -5,6 +5,8 @@ from modules import sql_functions as sql
 from modules import excel_functions as ex
 from modules import request_functions as rq
 from selenium import webdriver
+from selenium.common.exceptions import SessionNotCreatedException
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
 from fake_useragent import UserAgent
 
@@ -45,7 +47,17 @@ def get_driver():
     driver = Driver(chrome_options=options)
     return driver
 
-def check_procedure(params, transfer, set_use_thread):
+def check_driver_procedure(obj, params, transfer, set_use_thread):
+    msg = None
+    try:
+        driver = get_driver()
+        driver.close()
+    except (SessionNotCreatedException, WebDriverException) as e:
+        msg = e.msg
+    transfer(obj, ('check_driver_procedure', not bool(msg), msg, '', ''))
+    set_use_thread(obj)
+
+def check_procedure(obj, params, transfer, set_use_thread):
     driver = get_driver()
     for key, value in params.items():
         hrefs = [key]
@@ -55,13 +67,13 @@ def check_procedure(params, transfer, set_use_thread):
             flag, href = validator(res)
             if href:
                 hrefs[0] = href
-            transfer(('check_procedure', flag, name_operation, m_name, hrefs[0]))
+            transfer(obj, ('check_procedure', flag, name_operation, m_name, hrefs[0]))
             if not flag:
                 break
     driver.close()
-    set_use_thread()
+    set_use_thread(obj)
 
-def parsing_category_procedure(params, transfer, set_use_thread):
+def parsing_category_procedure(obj, params, transfer, set_use_thread):
     save_dir_path = params['save_dir_path']
     columns_names = params['columns_names']
     styles = params['styles']
@@ -94,10 +106,10 @@ def parsing_category_procedure(params, transfer, set_use_thread):
             msg = ex.get_file_from_data(save_dir_path, file_name, data, columns_names, styles)
         else:
             break
-        transfer(('parsing_category_procedure', not bool(msg), msg, file_name, save_dir_path))
-    set_use_thread()
+        transfer(obj, ('parsing_category_procedure', not bool(msg), msg, file_name, save_dir_path))
+    set_use_thread(obj)
 
-def parsing_items_procedure(params, transfer, set_use_thread):
+def parsing_items_procedure(obj, params, transfer, set_use_thread):
     save_dir_path = params['save_dir_path']
     styles = params['styles']
     update_file_name = params['update_file_name']
@@ -133,17 +145,17 @@ def parsing_items_procedure(params, transfer, set_use_thread):
                     images_paths, file_names, values, fields_names = ex.get_image_fields(row[2], item_images)
                     get_images(images_dir_path, images_paths, file_names)
                     item_row += values
-                    if len(columns_names) - 1 == len(item_row):
+                    if len(columns_names) == len(item_row):
                         update_table.append(item_row)
                 driver.close()
-    query, data = sql.get_insert_query('update_table', columns_names[1:], update_table)
+    query, data = sql.get_insert_query('update_table', columns_names, update_table)
     msg = sql.make_many_query(db, query, data)
     if msg is None:
         msg = ex.get_file_from_data(save_dir_path, update_file_name,
-                                    update_table, columns_names[1:], styles)
+                                    update_table, columns_names, styles)
 
-    transfer(('parsing_item_procedure', not bool(msg), msg, update_file_name, save_dir_path))
-    set_use_thread(True)
+    transfer(obj, ('parsing_item_procedure', not bool(msg), msg, update_file_name, save_dir_path))
+    set_use_thread(obj, True)
     # if not msg:
     #     self.parser_widget.console.message = f'Файл {update_file_name} сохранен в папке {save_dir_path}.'
     #     self.parser_widget.step_button.text = 'Шаг 1'
