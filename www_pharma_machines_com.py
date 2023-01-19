@@ -64,7 +64,7 @@ def get_item_content(driver, item_url: str):
     article, page_title, intro_text, brand, dimensions = '', '', '', '', ''
     header = find_element(driver, By.CSS_SELECTOR, 'div.show-info__header .show-info__title')
     if header is not None:
-        template = r'^[A-Z]+\s*\d{5}\s*[A-Z]\s*-\s*'
+        template = r'^[A-Z]+\s*\d{1,5}\s*[A-Z]\s*-\s*'
         article = re.findall(template, header.text)[0]
         page_title = header.text.replace(article, '')
         article = article.replace(' ', '').rstrip('-')
