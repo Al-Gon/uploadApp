@@ -1,6 +1,7 @@
 import requests
 import os
 import json
+import chromedriver_autoinstaller
 from modules import sql_functions as sql
 from modules import excel_functions as ex
 from modules import request_functions as rq
@@ -41,10 +42,17 @@ def get_driver():
     options = Options()
     ua = UserAgent()
     user_agent = ua.random
+    options.add_argument("--start-maximized")
     options.add_argument(f'user-agent={user_agent}')
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    driver = Driver(chrome_options=options)
+
+    chromedriver_autoinstaller.install(path='webdriver/')
+    version = chromedriver_autoinstaller.get_chrome_version().split('.', 1)[0]
+    path = f'webdriver/{version}/chromedriver.exe'
+    
+    driver = Driver(executable_path=path, 
+                    chrome_options=options)
     return driver
 
 def check_driver_procedure(obj, params, transfer, set_use_thread):
