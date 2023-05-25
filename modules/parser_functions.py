@@ -46,7 +46,6 @@ def get_driver():
     options.add_argument(f'user-agent={user_agent}')
     options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-
     chromedriver_autoinstaller.install(path='webdriver/')
     version = chromedriver_autoinstaller.get_chrome_version().split('.', 1)[0]
     path = f'webdriver/{version}/chromedriver.exe'
