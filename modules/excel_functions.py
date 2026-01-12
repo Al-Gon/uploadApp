@@ -4,6 +4,7 @@ import os
 import re
 from openpyxl.styles import Font, PatternFill, Side, Border, Alignment
 
+
 def check_file_path(file_path: str):
     try:
         f = open(file_path, 'r')
@@ -11,6 +12,7 @@ def check_file_path(file_path: str):
     except IOError:
         return False
     return True
+
 
 def check_folder_path(folder_path: str) -> bool:
     """Creates folder if it does not exist."""
@@ -28,6 +30,7 @@ def check_file_name(name: str):
     pattern = r'.*_\d{2}_\d{2}.{1}xlsx'
     return True if not name or re.findall(pattern, name) else False
 
+
 def make_file_name(name: str, extension: str, substr: bool = False):
     """Returns the file name with specified extension as a string """
     date = f'_{datetime.datetime.now().strftime("%d_%m")}'
@@ -39,6 +42,7 @@ def make_file_name(name: str, extension: str, substr: bool = False):
         # url = f'_{url.lstrip("https://").split("/")[0].replace(".", "_")}'
     return f'{name}{site}{date}{extension}'
 
+
 def del_dir_files(dir_path: str) -> bool:
     """Returns True if dir is empty."""
     for file in os.listdir(dir_path):
@@ -48,11 +52,13 @@ def del_dir_files(dir_path: str) -> bool:
     else:
         return True
 
+
 def get_worksheet(file_path: str):
     wb = openpyxl.load_workbook(file_path)
     sh = wb.active
     title_row = list(sh[1])
     return sh, title_row
+
 
 def get_table(w_sheet, min_row: int, max_col: int):
     main_table = []
@@ -70,6 +76,7 @@ def get_table(w_sheet, min_row: int, max_col: int):
         main_table.append(new_row)
 
     return main_table, max_row
+
 
 def get_file_from_data(folder_path: str, file_name: str, data: list, columns_names: list, styles: list):
     """
@@ -130,8 +137,10 @@ def get_image_fields(alias: str, images_paths: list) -> tuple:
     fields_names = ['image'] + [f'image_{str(i)}' for i in range(1, num)]
     return images_paths, file_names, values, fields_names
 
+
 def check_values(dict_, list_: list):
     return [el for el in list_ if not dict_[el]]
+
 
 def get_report(missing: list):
     report = 'Отсутствуют следующие настройки для выполнения операции:\n'
