@@ -1,0 +1,193 @@
+<ScrollLabel>
+    massage: 'Консоль'
+    scroll_type: ['bars', 'content']
+    bar_width: 10
+    Label:
+        size_hint_y: None
+        text_size: self.width, None
+        height: self.texture_size[1]
+        padding: 20, 20
+        text: root.message
+        color: utils.get_color_from_hex('#000000')
+
+<ItemLabel>
+    font_size: '15sp'
+    padding: 20, 20
+    halign: 'left'
+    valign: 'top'
+    text_size: self.size
+    multiline: True
+    markup: True
+    color: utils.get_color_from_hex('#000000')
+    text: self.message
+    canvas.before:
+        Color:
+            rgba: utils.get_color_from_hex('#ffffff')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<InputLabel@Label>
+    halign: 'left'
+    valign: 'top'
+    text_size: self.size
+    multiline: True
+    markup: True
+    size_hint: .3, .4
+    pos_hint: {'x':.02, 'y':.5}
+    color: utils.get_color_from_hex('#000000')
+
+<InputString@TextInput>
+    multiline: True
+    markup: True
+    background_normal: 'white_pixel.png'
+    background_active: 'white_pixel.png'
+    size_hint: .66, .4
+    pos_hint: {'x':.32, 'y':.5}
+
+<CheckSaveButton@Button>
+    size_hint: .3, .3
+    pos_hint: {'x':.68, 'y':.1}
+
+<InputBlock>
+    padding: [5, 5, 5, 5]
+    size_hint: 1, None
+    height: 120
+    text_label: ''
+    #input_string: ''
+    button_name: ''
+    button_text: 'Проверить/Сохранить'
+    input: input
+
+    InputLabel:
+        text: root.text_label
+
+    InputString:
+        id: input
+        text: root.input_string
+
+    CheckSaveButton:
+        name: root.button_name
+        text: root.button_text
+        on_release: root.handle_path(self.name)
+
+<ChooseColorBlock>
+    cols: 1
+    size_hint: 1, None
+    text_label: ''
+    button_name: ''
+    button_text: 'Выбрать/Сохранить'
+    #choose_color: 'CCFFCC'
+
+    FloatLayout:
+        padding: [5, 5, 5, 5]
+        size_hint: 1, None
+
+        InputLabel:
+            text: root.text_label
+
+        BoxLayout:
+            orientation: 'horizontal'
+            pos_hint: {'x':.32, 'y':.5}
+            size_hint: .7, .4
+            Label:
+                size_hint: .3, 1
+                canvas.before:
+                    Color:
+                        rgba: utils.get_color_from_hex(root.choose_color)
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+            Label:
+                size_hint: .5, 1
+                text: root.choose_color
+                color: utils.get_color_from_hex('000000')
+
+        CheckSaveButton:
+            name: root.button_name
+            text: root.button_text
+            on_release: root.handle_color(self.name)
+
+<ScreenTemplate>
+    main_screen: main_screen
+    text_label: text_label
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'top'
+
+        FloatLayout:
+            size_hint: 1, .1
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#999999')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                id: text_label
+                markup: True
+                pos_hint: {'x':.025, 'y':0}
+                size_hint: .3, .7
+                text_size: self.size
+                halign: 'center'
+
+                canvas.before:
+                    Color:
+                        rgba: utils.get_color_from_hex('#bcbcbc')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+        AnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'bottom'
+
+            FloatLayout:
+                id: main_screen
+                size_hint: 1, .9
+                canvas:
+                    Color:
+                        rgba: utils.get_color_from_hex('#999999')
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+<ClearLabel>
+    markup: True
+    height: self.texture_size[1]
+    text_size: self.width, None
+    color: utils.get_color_from_hex('#000000')
+    canvas.before:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.texture_size
+
+<ChooseValueItem>:
+    cols: 2
+    size_hint: 1, None
+    height: 50
+    padding: [5, 5, 5, 5]
+    active: False
+    check_box: check_box
+
+    Label:
+        height: 50
+        halign: 'left'
+        valign: 'center'
+        text_size: self.size
+        multiline: True
+        markup: True
+        color: utils.get_color_from_hex('#000000')
+        text: self.parent.label_text
+
+    CheckBox:
+        id: check_box
+        size_hint_x: None
+        width: 80
+        group: 'choose_value'
+        active: root.active
+        color: utils.get_color_from_hex('#000000')
+        allow_no_selection: False

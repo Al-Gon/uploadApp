@@ -1,0 +1,64 @@
+#:import utils kivy.utils
+
+<LoadLayout>
+    orientation: 'vertical'
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    input: input
+    console: console
+    step_button_1: step_button_1
+    step_button_2: step_button_2
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        size_hint: 1, .6
+        anchor_x: 'center'
+        anchor_y: 'center'
+        BoxLayout:
+            size_hint: .94, .94
+            canvas:
+                Color:
+                    rgba: utils.get_color_from_hex('#ffffff')
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            ScrollLabel:
+                id: console
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        TextInput:
+            id: input
+            size_hint: .94, .94
+            padding: 20, 20
+            multiline: True
+            text: 'Поле ввода.'
+            background_normal: 'white_pixel.png'
+            background_active: 'white_pixel.png'
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+            Button:
+                size_hint: .5, 1
+                id: step_button_1
+                text: 'Шаг 1'
+                on_release: root.load_press_step(self.text)
+            Button:
+                size_hint: .5, 1
+                id: step_button_2
+                text: 'Шаг 4'
+                on_release: root.load_press_step(self.text)

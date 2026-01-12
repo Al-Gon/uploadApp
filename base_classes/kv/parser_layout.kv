@@ -1,0 +1,60 @@
+#:import utils kivy.utils
+
+<ParserLayout>
+    orientation: 'vertical'
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    step_button: step_button
+    console: console
+    input_field: input_field
+
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .3
+
+        TextInput:
+            id: input_field
+            size_hint: .94, .94
+            #height: 1000
+            padding: 20, 20
+            multiline: True
+            markup: True
+            background_normal: 'white_pixel.png'
+            background_active: 'white_pixel.png'
+            text: root.message
+
+
+    AnchorLayout:
+        #pos_hint: {'x':0, 'y':0}
+        anchor_x: 'center'
+        anchor_y: 'center'
+        size_hint: 1, .55
+
+        ItemLabel:
+            id: console
+            size_hint: .94, .94
+            pos_hint: {'x':.02, 'y':.1}
+            message: 'Консоль'
+
+    AnchorLayout:
+        size_hint: 1, .15
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+
+            Button:
+                size_hint: .2, 1
+                id: step_button
+                text: 'Шаг 1'
+                on_release: root.parser_press_step(self.text)

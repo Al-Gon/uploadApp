@@ -1,0 +1,42 @@
+<Uploader>
+    _screen_manager: _screen_manager
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'top'
+
+        NewScreenManager:
+            size_hint: 1, .9
+            id: _screen_manager
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'bottom'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: 1, .1
+
+            Button:
+                id : setting_button
+                text: 'Настройки'
+                on_release: app.root.set_current_screen('screen1')
+
+            Button:
+                id : load_button
+                text: 'Загрузка'
+                on_release: app.root.set_current_screen('screen2')
+
+            Button:
+                id : parsing_button
+                text: 'Парсинг'
+                on_release: app.root.set_current_screen('screen3')
+
+            Button:
+                id : processing_button
+                text: 'Обработка'
+                on_release: app.root.set_current_screen('screen4')
+
+            Button:
+                id : upload_button
+                text: 'Выгрузка'
+                on_release: app.root.set_current_screen('screen5')

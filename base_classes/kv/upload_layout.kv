@@ -1,0 +1,42 @@
+#:import utils kivy.utils
+
+<UploadLayout>
+    orientation: 'vertical'
+    size_hint: .95, .975
+    pos_hint: {'x':.025, 'y':.025}
+    console: console
+    canvas:
+        Color:
+            rgba: utils.get_color_from_hex('#bcbcbc')
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        size_hint: 1, .8
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        ItemLabel:
+            id: console
+            size_hint: .94, .94
+            message: 'Консоль'
+
+    AnchorLayout:
+        size_hint: 1, .2
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint: .6, .5
+
+            Button:
+                size_hint: .5, 1
+                text: 'Выгрузка'
+                on_release: root.upload_step()
+
+            Button:
+                size_hint: .5, 1
+                text: 'Удаление'
+                on_release: root.delete_step()
